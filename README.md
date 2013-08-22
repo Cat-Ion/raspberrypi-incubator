@@ -12,6 +12,9 @@ There is a web interface to show a graph of the most recent data
 (together with average values and standard deviation) and change the
 wanted temperature and humidity levels.
 
+Feel free to send me a pull request if you have anything to
+contribute.
+
 Todo
 ----
 
