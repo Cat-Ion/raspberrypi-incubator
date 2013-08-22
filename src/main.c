@@ -1,0 +1,67 @@
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
+#include "therm.h"
+
+void end() {
+	i2c_end();
+	httpd_end();
+}
+
+void init() {
+	log_num = 0;
+	wanted_temperature = 34;
+	wanted_humidity = 60;
+	i2c_init();
+	httpd_init();
+
+	struct sigaction sa = (struct sigaction) {
+		.sa_handler = &reload,
+		.sa_flags = 0,
+		.sa_restorer = NULL
+	};
+
+	sigemptyset(&(sa.sa_mask));
+	sigaddset(&(sa.sa_mask), SIGUSR1);
+
+	if(sigaction(SIGUSR1, &sa, NULL) < 0) {
+		fprintf(stderr, "Couldn't install signal handler.\n");
+		exit(1);
+	}
+}
+
+void reload(int signal) {
+	httpd_reload();
+}
+
+int main(int argc, char **argv) {
+	float data[2];
+
+	init();
+
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	for(;;) {
+		if(!read_data(data)) {
+			continue;
+		}
+
+		log_data[log_num%LOG_SIZE].timestamp = time(NULL);
+		log_data[log_num%LOG_SIZE].temperature = data[1];
+		log_data[log_num%LOG_SIZE].humidity = data[0];
+		log_num++;
+
+		pid_control(data[1], data[0]);
+		stats();
+
+		if(logstdout(data) == EOF) {
+			break;
+		}
+
+		delay_ns(&ts, PERIOD_S, 0);
+	}
+
+	end();
+}
