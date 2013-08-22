@@ -49,7 +49,7 @@ Installation
 - Run make (don't forget to set CC if you're using a crosscompiler).
 
 - Copy js/* to your webserver (if you're using your own) and main and
-  html/root.html to your RPi.
+  html/root.html (as 'roottemplate') to your RPi.
 
 - Run main in the same directory where you copied your root.html. It
   should start printing its log data to the standard output.
