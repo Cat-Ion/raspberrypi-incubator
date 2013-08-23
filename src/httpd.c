@@ -67,7 +67,7 @@ struct MHD_Response *gzip_if_possible_buffer(struct MHD_Connection *connection,
 }
 
 void add_expires_header(struct MHD_Response *res) {
-	time_t exptime = log_data[(log_num-1)%LOG_SIZE].timestamp + 10;
+	time_t exptime = log_data[(log_num-1)%LOG_SIZE].timestamp + PERIOD_S;
 	char buf[64];
 	struct tm tm;
 
