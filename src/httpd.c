@@ -66,6 +66,19 @@ struct MHD_Response *gzip_if_possible_buffer(struct MHD_Connection *connection,
 	}
 }
 
+void add_expires_header(struct MHD_Response *res) {
+	time_t exptime = log_data[(log_num-1)%LOG_SIZE].timestamp + 10;
+	char buf[64];
+	struct tm tm;
+
+	if(gmtime_r(&exptime, &tm) == NULL) {
+		return;
+	}
+
+	strftime(buf, 64, "%a, %d %b %Y %T GMT", &tm);
+	MHD_add_response_header(res, "Expires", buf);
+}
+
 static int handle_conn(void *cls, struct MHD_Connection *connection, 
                        const char *url, 
                        const char *method, const char *version, 
@@ -90,6 +103,7 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 		                                       (void*) response,
 		                                       MHD_RESPMEM_MUST_FREE);
 		MHD_add_response_header(mhd_response, "Content-Type", "text/html");
+		add_expires_header(mhd_response);
 		ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_response);
 		MHD_destroy_response(mhd_response);
 		return ret;
@@ -130,6 +144,7 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 		mhd_response = gzip_if_possible_buffer(connection, len, (void *) response, MHD_RESPMEM_MUST_FREE);
 		MHD_add_response_header(mhd_response, "Content-Type", "text/plain");
 		MHD_add_response_header(mhd_response, "Content-Disposition", "inline");
+		add_expires_header(mhd_response);
 		ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_response);
 		MHD_destroy_response(mhd_response);
 		return ret;
