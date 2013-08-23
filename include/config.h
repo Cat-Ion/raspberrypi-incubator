@@ -16,6 +16,12 @@
 #define LOG_S 3600
 #define LOG_SIZE (LOG_S/PERIOD_S)
 
+/* Minimum and maximum environment parameters */
+#define TEMP_MIN 26
+#define TEMP_MAX 34
+#define HUM_MIN 50
+#define HUM_MAX 80
+
 /* Parameters for the PID control of the temperature and humidity. Still haven't tested these. */
 #define T_P 1
 #define T_I 0

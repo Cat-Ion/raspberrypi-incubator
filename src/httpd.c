@@ -197,8 +197,8 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 			f_hum = pi->hum;
 		free(pi);
 
-		if(f_temp >= 20 && f_temp <= 40 &&
-		   f_hum  >= 50 && f_hum  <= 80) {
+		if(f_temp >= TEMP_MIN && f_temp <= TEMP_MAX &&
+		   f_hum  >= HUM_MIN && f_hum  <= HUM_MAX) {
 			wanted_temperature = f_temp;
 			wanted_humidity = f_hum;
 		}
