@@ -30,7 +30,7 @@
    | 32   | 25       |
    | 33   | 0        |
    
-   I know less about the temperature, but about 70% RH should be safe.
+   I know less about the humidity, but about 70% RH should be safe.
  */
 #define TEMP_MIN 26
 #define TEMP_DEF 31.5
