@@ -12,8 +12,8 @@ void end() {
 
 void init() {
 	log_num = 0;
-	wanted_temperature = 34;
-	wanted_humidity = 60;
+	wanted_temperature = TEMP_DEF;
+	wanted_humidity = HUM_DEF;
 	i2c_init();
 	httpd_init();
 
