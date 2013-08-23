@@ -78,7 +78,7 @@ int set_voltage_uint16_eeprom(uint16_t v) {
 	
 	uint8_t data[3];
 	data[0] = 0x60;
-	data[1] = (v >> 8) & 0xFF;
+	data[1] = (v >> 8) & 0x0F;
 	data[2] = (v >> 0) & 0xFF;
 	return i2c_send(DAC_ADDR, data, 3) != 3;
 }
