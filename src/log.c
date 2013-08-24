@@ -53,14 +53,14 @@ static void sortlogs() {
 	if(log_num < LOG_SIZE) {
 		log_sorted[log_num-1] = log_data[log_num-1];
 	} else {
-		for(int i = 0; i < log_num; i++) {
+		for(int i = 0; i < LOG_SIZE; i++) {
 			log_sorted[i] = log_data[(log_num+i)%LOG_SIZE];
 		}
 	}
 	if(log_day_num < LOG_DAY_SIZE) {
 		log_day_sorted[log_day_num-1] = log_day_data[log_day_num-1];
 	} else {
-		for(int i = 0; i < log_num; i++) {
+		for(int i = 0; i < LOG_DAY_SIZE; i++) {
 			log_day_sorted[i] = log_day_data[(log_day_num+i)%LOG_DAY_SIZE];
 		}
 	}
