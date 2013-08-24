@@ -1,29 +1,44 @@
 #include <math.h>
 #include "therm.h"
 
-void stats() {
-	int end = log_num < LOG_SIZE ? log_num : LOG_SIZE;
-
-	float t = 0, h = 0;
-	
-	for(int i = 0; i < end; i++) {
-		t += log_data[i].temperature;
-		h += log_data[i].humidity;
+void stats_data(log_data_t *data, int num,
+				float *avg_temp, float *avg_hum,
+				float *std_temp, float *std_hum) {
+	float t = 0,
+		h = 0;
+	for(int i = 0; i < num; i++) {
+		t += data[i].temperature;
+		h += data[i].humidity;
 	}
 
-	avg_temperature = t / end;
-	avg_humidity = h / end;
+	*avg_temp = t / num;
+	*avg_hum = h / num;
 
 	t = h = 0;
-	for(int i = 0; i < end; i++) {
-		float u = log_data[i].temperature - avg_temperature;
+	for(int i = 0; i < num; i++) {
+		float u = data[i].temperature - *avg_temp;
 		t += u*u;
 
-		u = log_data[i].humidity - avg_humidity;
+		u = data[i].humidity - *avg_hum;
 		h += u*u;
 	}
 
-	sd_temperature = sqrt(t/end);
-	sd_humidity = sqrt(h/end);
+	*std_temp = sqrt(t/num);
+	*std_hum = sqrt(h/num);
+}
+
+void stats() {
+	log_data_t *data;
+	int num;
+
+	data = getlog(&num);
+	stats_data(data, num,
+			   &avg_temperature, &avg_humidity,
+			   &sd_temperature, &sd_humidity);
+	data = getdaylog(&num);
+	stats_data(data, num,
+			   &avg_day_temperature, &avg_day_humidity,
+			   &sd_day_temperature, &sd_day_humidity);
+	
 }
 

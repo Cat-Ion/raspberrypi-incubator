@@ -13,8 +13,8 @@
 /* How often should the sensor make a measurement, and how long should
    a sample be kept in memory? */
 #define PERIOD_S 10
+#define PERIOD_DAY_S 60
 #define LOG_S 3600
-#define LOG_SIZE (LOG_S/PERIOD_S)
 
 /* Minimum and maximum environment parameters for requests.
    

@@ -10,11 +10,11 @@ void end() {
 }
 
 void init() {
-	log_num = 0;
 	wanted_temperature = TEMP_DEF;
 	wanted_humidity = HUM_DEF;
 	i2c_init();
 	httpd_init();
+	logs_init();
 
 	struct sigaction sa = (struct sigaction) {
 		.sa_handler = &reload,

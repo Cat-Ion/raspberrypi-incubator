@@ -3,14 +3,23 @@
 #include "therm.h"
 
 #define LOG_DAY_SIZE (24*3600/PERIOD_S)
+#define LOG_SIZE (LOG_S/PERIOD_S)
 
 int sorted;
 
+int log_num;
 int log_day_num;
-log_data_t log_day_data[LOG_DAY_SIZE],
-	log_day_sorted[LOG_DAY_SIZE],
-	log_sorted[LOG_SIZE];
 
+log_data_t log_data[LOG_SIZE],
+	log_day_data[LOG_DAY_SIZE],
+	log_sorted[LOG_SIZE],
+	log_day_sorted[LOG_DAY_SIZE];
+
+void logs_init() {
+	log_num = 0;
+	log_day_num = 0;
+	sorted = 1;
+}
 static void formattime(char *buf, size_t len) {
 	time_t t = time(NULL);
 	struct tm now;
@@ -22,8 +31,8 @@ void log_values(float temp, float humidity) {
 	log_data[log_num%LOG_SIZE].timestamp = time(NULL);
 	log_data[log_num%LOG_SIZE].temperature = temp;
 	log_data[log_num%LOG_SIZE].humidity = humidity;
-	if((log_data[log_num%LOG_SIZE].timestamp % 60) < 10) {
-		log_day_data[log_day_num % LOG_DAY_SIZE] = log_data[log_num];
+	if((log_data[log_num%LOG_SIZE].timestamp % PERIOD_DAY_S) < PERIOD_S) {
+		log_day_data[log_day_num % LOG_DAY_SIZE] = log_data[log_num%LOG_SIZE];
 		log_day_num++;
 	}
 	log_num++;
@@ -67,4 +76,18 @@ log_data_t *getdaylog(int *num) {
 	sortlogs();
 	*num = (log_day_num < LOG_DAY_SIZE) ? log_day_num : LOG_DAY_SIZE;
 	return log_day_sorted;
+}
+
+time_t lastlogtime() {
+	if(log_num == 0) {
+		return 0;
+	}
+	return log_data[(log_num-1)%LOG_SIZE].timestamp;
+}
+
+time_t lastdaylogtime() {
+	if(log_day_num == 0) {
+		return 0;
+	}
+	return log_day_data[(log_day_num-1)%LOG_DAY_SIZE].timestamp;
 }
