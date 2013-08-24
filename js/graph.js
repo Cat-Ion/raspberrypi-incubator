@@ -129,7 +129,7 @@ var drawgraph = function(ctx,
 
 	ctx.strokeRect(px_x_min, px_y_min, px_x_diff, px_y_diff);
 
-	ctx.strokeStyle = "#000000";
+	ctx.strokeStyle = "#FF0000";
 	ctx.lineWidth = 1;
 	
 	ctx.beginPath();
