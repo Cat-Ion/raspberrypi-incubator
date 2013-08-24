@@ -1,5 +1,8 @@
 "use strict";
-var data, req, tempdata, humdata, tempavg, humavg;
+var req, day_req,
+    data, day_data,
+    templim_h, humlim_h,
+    templim_d, humlim_d;
 
 var gettime = function (a) {
 	return a[0];
@@ -13,123 +16,209 @@ var gethum = function (a) {
 	return a[2];
 };
 
-var drawpart = function (ctx, data, getx, gety) {
-	var i = 0;
+var gettics = function(min, max, range, density_t) {
+	var Q = [1,5,2,2.5,4,3];
+	var w = [0.25, 0.25, 0.5];
+	var result;
+	var best_score = -200;
+	
+	if(min == max) {
+		return { 'min': min - 0.5,
+				 'max': min + 0.5,
+				 'step': 0.2,
+				 'score': 1
+			   };
+	}
+
+	var q, j, shat, k, dhat, delta, z, lstep, chat, start, s, d, c, lmin, lmax;
+
+	var density = function(r) {
+		return 2 - Math.max(density_t/r, r/density_t);
+	};
+	var density_max = function(r) {
+		if(r > density_t) {
+			return 1;
+		} else {
+			return 2 - density_t / r;
+		}
+	}
+	var simplicity = function(q, j, lmin, lmax, lstep) {
+		var v = ((Math.abs(lmin)%lstep < 1e-4) && lmin <= 0 && lmax >= 0) ? 1 : 0;
+		return 1 + v - q/5 - j;
+	};
+	var simplicity_max = function(q, j) {
+		return 2 - q/5 - j;
+	};
+	var coverage = function(lmin, lmax) {
+		return 1 - 0.5*((max-lmax)*(max-lmax) + (min-lmin)*(min-lmin))/(0.01*(max-min)*(max-min))
+	};
+	var coverage_max = function(span) {
+		var range = max-min;
+		if(span > range) {
+			var half = (span-range)/2
+			return 1 - 0.5 * (half*half+half*half)/(0.01*(max-min)*(max-min))
+		} else {
+			return 1;
+		}
+	};
+
+	for(q = 0; q < Q.length; q++) {
+		for(j = 1; j <= 20; j++) {
+			shat = simplicity_max(q, j);
+			if(shat*w[0] + w[1] + w[2] < best_score) {
+				break;
+			}
+			for(k = 2; k < 20; k++) {
+				dhat = density_max(k/range);
+				if(shat*w[0] + w[1] + dhat*w[2] < best_score) {
+					continue;
+				}
+				delta = (max-min)/(k+1)/(j*Q[q]);
+				for(z = Math.floor(Math.log(delta)/Math.LN10); z < 4; z++) {
+					//console.log([q,j,k,z]);
+					lstep = Q[q] * j * Math.pow(10, z);
+					chat = coverage_max((k-1)*lstep);
+					if(shat*w[0] + chat * w[1] + dhat * w[2] < best_score) {
+						continue;
+					}
+					var stmin = Math.floor(min/lstep)-k+1,
+					stmax = Math.ceil(max/lstep);
+					for(start = 0; start <= (stmax-stmin)*j; start++) {
+						lmin = stmin*lstep + start*lstep/j;
+						lmax = lmin + (k-1)*lstep;
+						s = simplicity(q, j, lmin, lmax, lstep);
+						d = density(k/range * (lmax-lmin)/(max-min));
+						c = coverage(lmin, lmax);
+
+						if(s * w[0] + c * w[1] + d * w[2] < best_score) {
+							continue;
+						}
+
+						best_score = s * w[0] + c * w[1] + d * w[2];
+						result = { 'min': lmin,
+								   'max': lmax,
+								   'step': lstep,
+								   'prec': z,
+								   'score': s * w[0] + c * w[1] + d * w[2]
+								 };
+					}
+				}
+			}
+		}
+	}
+	return result;
+}
+
+var drawgraph = function(ctx,
+			  px_x_min, px_x_max,
+			  px_y_min, px_y_max,
+			  data,
+			  data_x_min, data_x_max,
+			  data_y_min, data_y_max,
+			  getx, gety
+			 ) {
+	var i;
+	var px_x_diff = px_x_max - px_x_min;
+	var px_y_diff = px_y_max - px_y_min;
+	var data_x_diff = data_x_max - data_x_min;
+	var data_y_diff = data_y_max - data_y_min;
+
+	ctx.save();
+	ctx.strokeStyle = "#000000";
+	ctx.lineWidth = 1;
+
+	ctx.strokeRect(px_x_min, px_y_min, px_x_diff, px_y_diff);
+
+	ctx.strokeStyle = "#000000";
+	ctx.lineWidth = 1;
+	
 	ctx.beginPath();
-	ctx.moveTo(getx(data[i]), gety(data[i]));
-	i++;
+	ctx.moveTo(
+			px_x_min + (getx(data[0]) - data_x_min) * px_x_diff/data_x_diff,
+			px_y_max - (gety(data[0]) - data_y_min) * px_y_diff/data_y_diff
+	);
+	i = 1;
 	while(i < data.length) {
-		ctx.lineTo(getx(data[i]), gety(data[i]));
+		ctx.lineTo(
+			px_x_min + (getx(data[i]) - data_x_min) * px_x_diff/data_x_diff,
+			px_y_max - (gety(data[i]) - data_y_min) * px_y_diff/data_y_diff
+		);
 		i++;
 	}
 	ctx.stroke();
 	ctx.closePath();
-};
-var findtic = function (dst, min, max, px) {
-	var base = Math.pow(10, Math.floor(Math.log(dst/6)/Math.LN10)),
-	mintic = base * 1,
-	mincoord = px*base/dst,
-	coord = 0;
 	
-	coord = px * (2*base) / dst;
-	if((coord < max) && (coord > min)) { mintic = 2 * base; mincoord = coord; }
-
-	coord = px * (4*base) / dst;
-	if((coord < max) && (coord > min)) { mintic = 4 * base; mincoord = coord; }
-
-	coord = px * (5*base) / dst;
-	if((coord < max) && (coord > min)) { mintic = 5 * base; mincoord = coord; }
-
-	coord = px * (8*base) / dst;
-	if((coord < max) && (coord > min)) { mintic = 8 * base; mincoord = coord; }
-
-	return mintic;
-};
-var drawdata = function () {
-	var id = 'graph',
-	width = document.getElementById(id).scrollWidth,
-	height = document.getElementById(id).scrollHeight,
-	ctx = document.getElementById(id).getContext("2d"),
-	vertmargin = 5,
-	midheight = 20,
-	boxheight = (height-midheight) / 2 - vertmargin,
-	leftrightmargin = ctx.measureText("100.00   ").width + 8,
-	boxwidth = width - leftrightmargin * 2,
-	mintemp = Math.round((tempavg[0] - 3 * tempavg[1]) * 10) / 10,
-	maxtemp = Math.round((tempavg[0] + 3 * tempavg[1] + 0.05) * 10) / 10,
-	tictemp = findtic(maxtemp-mintemp, 20, 60, boxheight),
-	minhum = Math.round((humavg[0] - 3 * humavg[1]) * 10) / 10,
-	maxhum = Math.round((humavg[0] + 3 * humavg[1] + 0.05) * 10) / 10,
-	tichum = findtic(maxhum-minhum, 20, 60, boxheight),
-	bottom = boxheight + vertmargin, left = leftrightmargin,
-	minx = 0,
-	maxx = 3600,
-	miny = mintemp,
-	maxy = maxtemp,
-	i, text, size, x1, x2, y;
-
-	ctx.font = "10px Arial";
-	ctx.clearRect(0, 0, width, height);
-	ctx.strokeStyle = "#000000";
-	ctx.lineWidth = 1;
-
-	ctx.fillText("T",  2, vertmargin + boxheight/2 + 4);
-	ctx.fillText("RH", 2, vertmargin + 3*boxheight/2 + 4 + midheight);
-
-	ctx.strokeRect(leftrightmargin, vertmargin, boxwidth, boxheight);
-	ctx.strokeRect(leftrightmargin, vertmargin+boxheight+midheight, boxwidth, boxheight);
-
-	for(i = 0; i <= 60; i += 10) {
-		size = ctx.measureText(i);
-		ctx.fillText(i-60, leftrightmargin + i*boxwidth/60 - size.width/2, vertmargin + boxheight + 14);
-	}
-
-	for(i = mintemp; i <= maxtemp; i = Math.round((i + tictemp) * 100)/100) {
-		text = i.toPrecision(3);
-		size = ctx.measureText(text).width;
-		x1 = leftrightmargin - 2 - size;
-		x2 = leftrightmargin + boxwidth + 2;
-		y  = vertmargin + boxheight*(1-(i-mintemp)/(maxtemp-mintemp)) + 4;
-		ctx.fillText(text, x1, y);
-		ctx.fillText(text, x2, y);
-	}
-
-	for(i = minhum; i <= maxhum; i = Math.round((i + tichum) * 100)/100) {
-		text = i.toPrecision(3);
-		size = ctx.measureText(text).width;
-		x1 = leftrightmargin - 2 - size;
-		x2 = leftrightmargin + boxwidth + 2;
-		y  = vertmargin + boxheight + midheight + boxheight*(1-(i-minhum)/(maxhum-minhum)) + 4;
-		ctx.fillText(text, x1, y);
-		ctx.fillText(text, x2, y);
-	}
-
-	ctx.save();
-	ctx.strokeStyle="#FF0000";
-
-	ctx.setTransform(boxwidth/(maxx - minx),
-					 0,
-					 0,
-					 -boxheight/(maxy - miny),
-					 left    - boxwidth  * minx/(maxx-minx),
-					 bottom  + boxheight * miny/(maxy-miny));
-	ctx.lineWidth = (maxy-miny)/boxheight;
-	drawpart(ctx, data, gettime, gettemp);
-
-	bottom = height - vertmargin;
-	miny = minhum;
-	maxy = maxhum;
-	ctx.setTransform(boxwidth/(maxx - minx),
-					 0,
-					 0,
-					 -boxheight/(maxy - miny),
-					 left    - boxwidth  * minx/(maxx-minx),
-					 bottom  + boxheight * miny/(maxy-miny));
-	ctx.lineWidth = (maxy-miny)/boxheight;
-	drawpart(ctx, data, gettime, gethum);
-
 	ctx.restore();
-};
+}
+
+var drawtics = function(ctx,
+			 leftpadding, rightpadding, width,
+			 vertpadding, boxheight,
+			 datamin, datamax,
+			 ticmin, ticmax, ticstep, ticprecision) {
+	var ymin = ticmin < datamin ? ticmin : datamin;
+	var ymax = ticmax > datamax ? ticmax : datamax;
+	var i, x1, x2, text, size, y;
+	var prec = 3;
+	if(ticprecision < -1) {
+		prec = 2 - ticprecision;
+	}
+	for(i = 0; ticmin + i*ticstep <= ticmax; i++) {
+		text = (ticmin + i*ticstep).toPrecision(prec);
+		size = ctx.measureText(text).width;
+		
+		x1 = leftpadding - 2 - size;
+		x2 = width - rightpadding + 2;
+		y = vertpadding + boxheight * (1-((ticmin+i*ticstep) - ymin)/(ymax-ymin)) + 4;
+		ctx.fillText(text, x1, y);
+		ctx.fillText(text, x2, y);
+	}
+}
+
+var graph = function(id,
+		  time,
+		  data,
+		  templim, humlim
+		 ) {
+	var ctx = document.getElementById(id).getContext("2d");
+	var width = document.getElementById(id).scrollWidth;
+	var height = document.getElementById(id).scrollHeight;
+	var vertpadding = 5;
+	var midpadding = 20;
+	var rightpadding = ctx.measureText("100.000").width + 5;
+	var leftpadding = rightpadding + 20;
+
+	var boxwidth = width - rightpadding - leftpadding;
+	var boxheight = (height - 2*vertpadding - midpadding) / 2;
+
+	ctx.clearRect(0, 0, width, height);
+
+	var ymin = Math.floor(templim[0]*5-1)/5;
+	var ymax = Math.ceil(templim[1]*5+1)/5;
+	var tics = gettics(ymin, ymax, boxheight, 1/20);
+	drawtics(ctx, leftpadding, rightpadding, width, vertpadding, boxheight,
+			 ymin, ymax, tics.min, tics.max, tics.step, tics.prec);
+	drawgraph(ctx, leftpadding, width - rightpadding,
+			  vertpadding, vertpadding + boxheight,
+			  data,
+			  0, time,
+			  ymin, ymax,
+			  gettime, gettemp);
+	
+	ymin = Math.floor(humlim[0]*5-1)/5;
+	ymax = Math.ceil(humlim[1]*5+1)/5;
+	tics = gettics(ymin, ymax, boxheight, 1/20);
+	drawtics(ctx, leftpadding, rightpadding, width, vertpadding + boxheight + midpadding, boxheight,
+			 ymin, ymax, tics.min, tics.max, tics.step, tics.prec);
+
+	drawgraph(ctx, leftpadding, width - rightpadding,
+			  vertpadding + boxheight + midpadding, height - vertpadding,
+			  data,
+			  0, time,
+			  Math.floor(humlim[0]*2-1)/2, Math.ceil(humlim[1]*2+1)/2,
+			  gettime, gethum);
+}
+
 var replaceChild = function (id, text) {
 	var mod = document.getElementById(id);
 	mod.removeChild(mod.firstChild);
@@ -137,20 +226,42 @@ var replaceChild = function (id, text) {
 };
 var update = function () {
 	var now = Date.now();
+	templim_h = [100, 0];
+	humlim_h = [100, 0];
+
 	data = JSON.parse(req.responseText);
-	tempavg = data.temp;
-	humavg = data.hum;
 
 	replaceChild('tempavg', data.temp[0] + "\u00B1" + data.temp[1]);
 	replaceChild('tempsoll', data.temp[2]);
 	replaceChild('humavg', data.hum[0] + "\u00B1" + data.hum[1]);
 	replaceChild('humsoll', data.hum[2]);
 	data = data.logdata.map(function(d) {
+		if(d[1] < templim_h[0]) { templim_h[0] = d[1]; }
+		if(d[1] > templim_h[1]) { templim_h[1] = d[1]; }
+		if(d[2] < humlim_h[0]) { humlim_h[0] = d[2]; }
+		if(d[2] > humlim_h[1]) { humlim_h[1] = d[2]; }
 		return [ 3600 + (Date.parse(d[0]) - now)/1000,
 				 d[1],
 				 d[2]
 			   ]; });
-	drawdata();
+	graph('graph', 3600, data, templim_h, humlim_h);
+};
+var day_update = function () {
+	var now = Date.now();
+	templim_d = [100, 0];
+	humlim_d = [100, 0];
+
+	day_data = JSON.parse(day_req.responseText);
+	day_data = day_data.logdata.map(function(d) {
+		if(d[1] < templim_d[0]) { templim_d[0] = d[1]; }
+		if(d[1] > templim_d[1]) { templim_d[1] = d[1]; }
+		if(d[2] < humlim_d[0]) { humlim_d[0] = d[2]; }
+		if(d[2] > humlim_d[1]) { humlim_d[1] = d[2]; }
+		return [ 24*3600 + (Date.parse(d[0]) - now)/1000,
+				 d[1],
+				 d[2]
+			   ]; });
+	graph('day_graph', 24*3600, day_data, templim_d, humlim_d);
 };
 var requestupdate = function () {
 	req = new XMLHttpRequest();
@@ -158,22 +269,38 @@ var requestupdate = function () {
 	req.onload = update;
 	req.open("GET", "/log.json");
 	req.send();
+
+	day_req = new XMLHttpRequest();
+	day_req.overrideMimeType("application/json");
+	day_req.onload = day_update;
+	day_req.open("GET", "/daylog.json");
+	day_req.send();
 };
-var resizeCanvas = function() {
-	var g = document.getElementById('graph');
+var resizeCanvas = function(id) {
+	var g = document.getElementById(id);
 	g.setAttribute('width', window.innerWidth-20);
-	g.setAttribute('height', window.innerHeight*0.5);
+	g.setAttribute('height', window.innerHeight*0.4);
 }
 
 window.onresize = function() {
-	resizeCanvas();
+	resizeCanvas('graph');
+	resizeCanvas('day_graph');
 	update();
+	day_update();
 };
 
 var cd = document.getElementById('canvasdiv'),
+
 canvas = document.createElement('canvas');
 canvas.setAttribute('id', 'graph');
 cd.appendChild(canvas);
-resizeCanvas();
+resizeCanvas('graph');
+
+canvas = document.createElement('canvas');
+canvas.setAttribute('id', 'day_graph');
+cd.appendChild(canvas);
+resizeCanvas('day_graph');
+
 requestupdate();
 window.setInterval(requestupdate, 2000);
+gettics(24, 26.2, 532, 1/20);
