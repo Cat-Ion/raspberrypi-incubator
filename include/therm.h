@@ -5,11 +5,13 @@
 
 #include "config.h"
 
-struct {
+typedef struct {
 	time_t timestamp;
 	float temperature;
 	float humidity;
-} log_data[LOG_SIZE];
+} log_data_t;
+
+log_data_t log_data[LOG_SIZE];
 
 float avg_temperature;
 float avg_humidity;
@@ -43,7 +45,10 @@ void delay_ns(struct timespec *last, time_t s, long ns);
 
 void stats();
 
+void log_values(float temp, float humidity);
 int logstdout(float data[2]);
+log_data_t *getlog(int *num);
+log_data_t *getdaylog(int *num);
 
 void pid_control(float temp, float hum);
 #endif

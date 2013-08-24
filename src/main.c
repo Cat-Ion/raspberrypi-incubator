@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <math.h>
 #include "therm.h"
 
 void end() {
@@ -48,11 +47,7 @@ int main(int argc, char **argv) {
 			continue;
 		}
 
-		log_data[log_num%LOG_SIZE].timestamp = time(NULL);
-		log_data[log_num%LOG_SIZE].temperature = data[1];
-		log_data[log_num%LOG_SIZE].humidity = data[0];
-		log_num++;
-
+		log_values(data[1], data[0]);
 		pid_control(data[1], data[0]);
 		stats();
 

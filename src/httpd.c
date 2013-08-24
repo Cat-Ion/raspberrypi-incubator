@@ -66,8 +66,8 @@ struct MHD_Response *gzip_if_possible_buffer(struct MHD_Connection *connection,
 	}
 }
 
-void add_expires_header(struct MHD_Response *res) {
-	time_t exptime = log_data[(log_num-1)%LOG_SIZE].timestamp + PERIOD_S;
+void add_expires_header(struct MHD_Response *res, int timeout) {
+	time_t exptime = log_data[(log_num-1)%LOG_SIZE].timestamp + timeout;
 	char buf[64];
 	struct tm tm;
 
@@ -79,6 +79,38 @@ void add_expires_header(struct MHD_Response *res) {
 
 	strftime(buf, 64, "%a, %d %b %Y %T GMT", &tm);
 	MHD_add_response_header(res, "Expires", buf);
+}
+
+char *format_logs(log_data_t *data, int num, size_t *len) {
+		char *response = malloc(
+		                        strlen("{\n\"logdata\": [\n")
+		                        + num * strlen("\t[ \"YYYY-MM-DDThh:mm:ss.000+ZZZZ\", tt.t, hhh.h ],\n")
+		                        + strlen("],\n")
+		                        + strlen("\"temp\": [ ttt.t, t.tt, ttt.t ],\n")
+		                        + strlen("\"hum\":  [ hhh.h, h.hh, hhh.h ]\n")
+		                        + strlen("}")
+		                        );
+		*len = 0;
+		*len += sprintf(response, "{\n\"logdata\": [\n");
+		for(int i = 0; i < num; i++) {
+			struct tm tm;
+			localtime_r(&data[i].timestamp, &tm);
+
+			*len += sprintf (response + *len, "\t[ \"");
+			*len += strftime(response + *len, 32, "%Y-%m-%dT%H:%M:%S.000%z", &tm);
+			*len += sprintf (response + *len, "\", %4.1f, %5.1f ]%c\n",
+							 data[i].temperature,
+							 data[i].humidity,
+							 ", "[i == (num - 1)]);
+		}
+		*len += sprintf(response + *len,
+		               "],\n"
+		               "\"temp\": [ %5.1f, %4.2f, %5.1f ],\n"
+		               "\"hum\":  [ %5.1f, %4.2f, %5.1f ]\n"
+		               "}",
+		               avg_temperature, sd_temperature, wanted_temperature,
+		               avg_humidity, sd_humidity, wanted_humidity);
+		return response;
 }
 
 static int handle_conn(void *cls, struct MHD_Connection *connection, 
@@ -105,48 +137,35 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 		                                       (void*) response,
 		                                       MHD_RESPMEM_MUST_FREE);
 		MHD_add_response_header(mhd_response, "Content-Type", "text/html");
-		add_expires_header(mhd_response);
+		add_expires_header(mhd_response, PERIOD_S);
 		ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_response);
 		MHD_destroy_response(mhd_response);
 		return ret;
 	}
 
 	if(!strcmp(url, "/log.json")) {
-		int start = log_num > LOG_SIZE ? log_num  : 0;
-		int num   = log_num > LOG_SIZE ? LOG_SIZE : log_num;
-		char *response = malloc(
-		                        strlen("{\n\"logdata\": [\n")
-		                        + num * strlen("\t[ \"YYYY-MM-DDThh:mm:ss.000+ZZZZ\", tt.t, hhh.h ],\n")
-		                        + strlen("],\n")
-		                        + strlen("\"temp\": [ ttt.t, t.tt, ttt.t ],\n")
-		                        + strlen("\"hum\":  [ hhh.h, h.hh, hhh.h ]\n")
-		                        + strlen("}")
-		                        );
-		int len = 0;
-		len += sprintf(response, "{\n\"logdata\": [\n");
-		for(int i = 0; i < num; i++) {
-			struct tm tm;
-			localtime_r(&(log_data[(start + i) % LOG_SIZE].timestamp), &tm);
-
-			len += sprintf (response + len, "\t[ \"");
-			len += strftime(response + len, 32, "%Y-%m-%dT%H:%M:%S.000%z", &tm);
-			len += sprintf (response + len, "\", %4.1f, %5.1f ]%c\n",
-			                log_data[(start + i) % LOG_SIZE].temperature,
-			                log_data[(start + i) % LOG_SIZE].humidity,
-			                ", "[i == (num - 1)]);
-		}
-		len += sprintf(response + len,
-		               "],\n"
-		               "\"temp\": [ %5.1f, %4.2f, %5.1f ],\n"
-		               "\"hum\":  [ %5.1f, %4.2f, %5.1f ]\n"
-		               "}",
-		               avg_temperature, sd_temperature, wanted_temperature,
-		               avg_humidity, sd_humidity, wanted_humidity);
-
+		int num;
+		size_t len;
+		log_data_t *data = getlog(&num);
+		char *response = format_logs(data, num, &len);
 		mhd_response = gzip_if_possible_buffer(connection, len, (void *) response, MHD_RESPMEM_MUST_FREE);
 		MHD_add_response_header(mhd_response, "Content-Type", "text/plain");
 		MHD_add_response_header(mhd_response, "Content-Disposition", "inline");
-		add_expires_header(mhd_response);
+		add_expires_header(mhd_response, PERIOD_S);
+		ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_response);
+		MHD_destroy_response(mhd_response);
+		return ret;
+	}
+
+	if(!strcmp(url, "/daylog.json")) {
+		int num;
+		size_t len;
+		log_data_t *data = getdaylog(&num);
+		char *response = format_logs(data, num, &len);
+		mhd_response = gzip_if_possible_buffer(connection, len, (void *) response, MHD_RESPMEM_MUST_FREE);
+		MHD_add_response_header(mhd_response, "Content-Type", "text/plain");
+		MHD_add_response_header(mhd_response, "Content-Disposition", "inline");
+		add_expires_header(mhd_response, 60);
 		ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_response);
 		MHD_destroy_response(mhd_response);
 		return ret;
