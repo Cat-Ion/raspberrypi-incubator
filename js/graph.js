@@ -98,7 +98,7 @@ var gettics = function(min, max, range, density_t) {
 						result = { 'min': lmin,
 								   'max': lmax,
 								   'step': lstep,
-								   'prec': z,
+								   'prec': z - (Q[q] == 2.5 ? 1 : 0),
 								   'score': s * w[0] + c * w[1] + d * w[2]
 								 };
 					}
@@ -152,27 +152,19 @@ var drawgraph = function(ctx,
 }
 
 var drawtics = function(ctx,
-			 leftpadding, rightpadding, width,
-			 vertpadding, boxheight,
-			 datamin, datamax,
-			 ticmin, ticmax, ticstep, ticprecision) {
-	var ymin = ticmin < datamin ? ticmin : datamin;
-	var ymax = ticmax > datamax ? ticmax : datamax;
-	var i, x1, x2, text, size, y;
-	var prec = 3;
-	if(ticprecision < -1) {
-		prec = 2 - ticprecision;
-	}
+						ticmin, ticmax, ticstep, ticprecision,
+						getx, gety
+					   ) {
+	var i, text, size;
+	var prec = ticprecision <= 0 ? -ticprecision : 0;
 	for(i = 0; ticmin + i*ticstep <= ticmax; i++) {
-		text = (ticmin + i*ticstep).toPrecision(prec);
+		text = (ticmin + i*ticstep).toFixed(prec);
 		size = ctx.measureText(text).width;
-		
-		x1 = leftpadding - 2 - size;
-		x2 = width - rightpadding + 2;
-		y = vertpadding + boxheight * (1-((ticmin+i*ticstep) - ymin)/(ymax-ymin)) + 4;
-		ctx.fillText(text, x1, y);
-		ctx.fillText(text, x2, y);
+		ctx.fillText(text, getx(ticmin + i * ticstep, size), gety(ticmin + i * ticstep, size));
 	}
+}
+
+var drawverttics = function(ctx, ticmin, ticmax, ticstep, x, ymin, ymax) {
 }
 
 var graph = function(id,
@@ -196,8 +188,12 @@ var graph = function(id,
 	var ymin = Math.floor(templim[0]*5-1)/5;
 	var ymax = Math.ceil(templim[1]*5+1)/5;
 	var tics = gettics(ymin, ymax, boxheight, 1/20);
-	drawtics(ctx, leftpadding, rightpadding, width, vertpadding, boxheight,
-			 ymin, ymax, tics.min, tics.max, tics.step, tics.prec);
+	if(tics.min < ymin) { ymin = tics.min; }
+	if(tics.max > ymax) { ymax = tics.max; }
+	drawtics(ctx, tics.min, tics.max, tics.step, tics.prec,
+			 function(v, width) { return leftpadding - 2 - width; },
+			 function(v, width) { return vertpadding + boxheight * (1 - (v - ymin)/(ymax - ymin)) + 4 }
+			);
 	drawgraph(ctx, leftpadding, width - rightpadding,
 			  vertpadding, vertpadding + boxheight,
 			  data,
@@ -208,8 +204,12 @@ var graph = function(id,
 	ymin = Math.floor(humlim[0]*5-1)/5;
 	ymax = Math.ceil(humlim[1]*5+1)/5;
 	tics = gettics(ymin, ymax, boxheight, 1/20);
-	drawtics(ctx, leftpadding, rightpadding, width, vertpadding + boxheight + midpadding, boxheight,
-			 ymin, ymax, tics.min, tics.max, tics.step, tics.prec);
+	if(tics.min < ymin) { ymin = tics.min; }
+	if(tics.max > ymax) { ymax = tics.max; }
+	drawtics(ctx, tics.min, tics.max, tics.step, tics.prec,
+			 function(v, width) { return leftpadding - 2 - width; },
+			 function(v, width) { return height - vertpadding - boxheight * (v - ymin)/(ymax - ymin) + 4 }
+			);
 
 	drawgraph(ctx, leftpadding, width - rightpadding,
 			  vertpadding + boxheight + midpadding, height - vertpadding,
@@ -217,6 +217,13 @@ var graph = function(id,
 			  0, time,
 			  Math.floor(humlim[0]*2-1)/2, Math.ceil(humlim[1]*2+1)/2,
 			  gettime, gethum);
+
+	var timescale = time <= 60 ? 1 : time <= 3600 ? 1/60 : 1 / 3600;
+	tics = gettics(0, time * timescale, boxwidth, 12 / boxwidth);
+	drawtics(ctx, tics.min, tics.max, tics.step, tics.prec,
+			 function(v, width) { return leftpadding + v / timescale / time * boxwidth - width / 2; },
+			 function(v, width) { return vertpadding + boxheight + midpadding / 2 + 4; }
+			);
 }
 
 var replaceChild = function (id, text) {
