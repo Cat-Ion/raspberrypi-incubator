@@ -2,7 +2,7 @@
 #include <time.h>
 #include "therm.h"
 
-#define LOG_DAY_SIZE (24*3600/PERIOD_S)
+#define LOG_DAY_SIZE (24*3600/PERIOD_DAY_S)
 #define LOG_SIZE (LOG_S/PERIOD_S)
 
 int sorted;
@@ -64,6 +64,7 @@ static void sortlogs() {
 			log_day_sorted[i] = log_day_data[(log_day_num+i)%LOG_DAY_SIZE];
 		}
 	}
+	sorted = 1;
 }
 
 log_data_t *getlog(int *num) {
