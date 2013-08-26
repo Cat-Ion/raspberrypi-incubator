@@ -28,11 +28,23 @@ static void formattime(char *buf, size_t len) {
 }
 
 void log_values(float temp, float humidity) {
+	static float smoothed_temp = 0, smoothed_hum = 0;
+
 	log_data[log_num%LOG_SIZE].timestamp = time(NULL);
 	log_data[log_num%LOG_SIZE].temperature = temp;
 	log_data[log_num%LOG_SIZE].humidity = humidity;
+
+	if(log_num == 0) {
+		smoothed_temp = temp;
+		smoothed_hum = humidity;
+	} else {
+		smoothed_temp = (63 * smoothed_temp + temp) / 64;
+		smoothed_hum = (63 * smoothed_hum + humidity) / 64;
+	}
 	if((log_data[log_num%LOG_SIZE].timestamp % PERIOD_DAY_S) < PERIOD_S) {
-		log_day_data[log_day_num % LOG_DAY_SIZE] = log_data[log_num%LOG_SIZE];
+		log_day_data[log_day_num % LOG_DAY_SIZE].timestamp = time(NULL);
+		log_day_data[log_day_num % LOG_DAY_SIZE].temperature = smoothed_temp;
+		log_day_data[log_day_num % LOG_DAY_SIZE].humidity = smoothed_hum;
 		log_day_num++;
 	}
 	log_num++;
