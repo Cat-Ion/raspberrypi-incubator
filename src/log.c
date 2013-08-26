@@ -38,8 +38,8 @@ void log_values(float temp, float humidity) {
 		smoothed_temp = temp;
 		smoothed_hum = humidity;
 	} else {
-		smoothed_temp = (63 * smoothed_temp + temp) / 64;
-		smoothed_hum = (63 * smoothed_hum + humidity) / 64;
+		smoothed_temp = (15 * smoothed_temp + temp) / 16;
+		smoothed_hum = (15 * smoothed_hum + humidity) / 16;
 	}
 	if((log_data[log_num%LOG_SIZE].timestamp % PERIOD_DAY_S) < PERIOD_S) {
 		log_day_data[log_day_num % LOG_DAY_SIZE].timestamp = time(NULL);
