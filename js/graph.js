@@ -164,7 +164,17 @@ var drawtics = function(ctx,
 	}
 }
 
-var drawverttics = function(ctx, ticmin, ticmax, ticstep, x, ymin, ymax) {
+var drawTimeTics = function(ctx,
+							ticmin, ticmax, ticstep,
+							getx, gety) {
+	var i, text, size;
+	for(i = 0; ticmin + i*ticstep <= ticmax; i++) {
+		var d = new Date(Date.now() + 1000 * (ticmin + i*ticstep));
+		text = d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes();
+		size = ctx.measureText(text).width;
+		ctx.fillText(text, getx(ticmin + i * ticstep, size), gety(ticmin + i * ticstep, size));
+	}
+	
 }
 
 var graph = function(id,
@@ -218,11 +228,14 @@ var graph = function(id,
 			  Math.floor(humlim[0]*2-1)/2, Math.ceil(humlim[1]*2+1)/2,
 			  gettime, gethum);
 
-	var timescale = time <= 60 ? 1 : time <= 3600 ? 1/60 : 1 / 3600;
-	tics = gettics(0, time * timescale, boxwidth, 12 / boxwidth);
-	drawtics(ctx, tics.min, tics.max, tics.step, tics.prec,
-			 function(v, width) { return leftpadding + v / timescale / time * boxwidth - width / 2; },
-			 function(v, width) { return vertpadding + boxheight + midpadding / 2 + 4; }
+	var timescale = time <= 60 ? 1 : time <= 3600 ? 300 : 3600;
+	var timestart = Math.ceil( (Date.now()/1000 - time) / timescale )*timescale - Date.now() / 1000;
+	var timeend   = Math.floor( Date.now()/1000/timescale)*timescale - Date.now()/1000; 
+	var timetic   = timescale;
+
+	drawTimeTics(ctx, timestart, timeend, timetic,
+			 function(v, twidth) { return width - rightpadding + v/time*boxwidth - twidth / 2; },
+			 function(v, twidth) { return vertpadding + boxheight + midpadding / 2 + 4; }
 			);
 }
 
