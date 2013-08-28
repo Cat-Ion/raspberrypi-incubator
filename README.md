@@ -18,7 +18,7 @@ contribute.
 Todo
 ----
 
-- The control part is not actually done yet, but will use a 0.1 ohm
+- The control part is not actually done yet, but will use a 1 ohm
   resistor on the DAC to increase the temperature and most likely an
   ultrasonic fogger over a relay connected to a GPIO pin for the
   humidity control.
