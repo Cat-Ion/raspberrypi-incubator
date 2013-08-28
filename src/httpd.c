@@ -70,7 +70,7 @@ void add_expires_header(struct MHD_Response *res, time_t exptime) {
 	char buf[64];
 	struct tm tm;
 
-	MHD_add_response_header(res, "Cache-Control", "max-age=10, must-revalidate");
+	MHD_add_response_header(res, "Cache-Control", "max-age=10");
 
 	if(gmtime_r(&exptime, &tm) == NULL) {
 		return;
