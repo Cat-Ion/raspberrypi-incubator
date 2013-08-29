@@ -15,6 +15,7 @@ void init() {
 	i2c_init();
 	httpd_init();
 	logs_init();
+	pid_init();
 
 	struct sigaction sa = (struct sigaction) {
 		.sa_handler = &reload,
