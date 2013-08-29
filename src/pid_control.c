@@ -55,7 +55,7 @@ float temp_control(float temp) {
 
 	float p  = diff;
 	float i  = pid_temp.acc;
-	float d  = (old - diff);
+	float d  = (pid_temp.old - diff);
 
 	pid_temp.old = diff;
 	
