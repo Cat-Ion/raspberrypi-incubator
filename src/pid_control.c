@@ -3,26 +3,63 @@
 struct pid_t {
 	float p, i, d;
 	float imax;
-};
+
+	float old;
+	float acc;
+} pid_temp, pid_hum;
+
+void pid_init() {
+	pid_temp.p   = T_P;
+	pid_temp.i   = T_I;
+	pid_temp.d   = T_D;
+	pid_temp.old = 0;
+	pid_temp.acc = 0;
+	
+	pid_hum.p   = H_P;
+	pid_hum.i   = H_I;
+	pid_hum.d   = H_D;
+	pid_hum.old = 0;
+	pid_hum.acc = 0;
+}
+
+void pid_getvalues(float *tp, float *ti, float *td,
+                   float *hp, float *hi, float *hd) {
+	*tp = pid_temp.p;
+	*ti = pid_temp.i;
+	*td = pid_temp.d;
+	*hp = pid_hum.p;
+	*hi = pid_hum.i;
+	*hd = pid_hum.d;
+}
+
+void pid_setvalues(float tp, float ti, float td,
+                   float hp, float hi, float hd) {
+	pid_temp.p = tp;
+	pid_temp.i = ti;
+	pid_temp.d = td;
+	pid_hum.p  = hp;
+	pid_hum.i  = hi;
+	pid_hum.d  = hd;
+}
 
 float temp_control(float temp) {
 	float diff = temp - wanted_temperature;
-	static float old = 0;
 
-	float p = diff;
-	static float i = 0;
-	float d = (old - diff);
-
-	old = diff;
+	pid_temp.acc += diff * PERIOD_S;
 	
-	i += diff * PERIOD_S;
-	if(i > T_IMAX) {
-		i = T_IMAX;
-	} else if(i < -T_IMAX) {
-		i = -T_IMAX;
+	if(pid_temp.acc > T_IMAX) {
+		pid_temp.acc = T_IMAX;
+	} else if(pid_temp.acc < -T_IMAX) {
+		pid_temp.acc = -T_IMAX;
 	}
 
-	float r = T_P * p + T_I * i + T_D * d;
+	float p  = diff;
+	float i  = pid_temp.acc;
+	float d  = (old - diff);
+
+	pid_temp.old = diff;
+	
+	float r = pid_temp.p * p + pid_temp.i * i + pid_temp.d * d;
 	return r;
 }
 
