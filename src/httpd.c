@@ -29,6 +29,9 @@ char *root_template = NULL;
 
 struct postinfo {
 	float temp, hum;
+#if HTTP_CONFIG_PID
+	float tp, ti, td, hp, hi, hd;
+#endif
 	struct MHD_PostProcessor *pp;
 };
 
@@ -42,6 +45,24 @@ int iterate_post(void *cls, enum MHD_ValueKind kind, const char *key, const char
 	} else if(!strcmp(key, "hum")) {
 		pi->hum = strtof(data, NULL);
 	}
+#if HTTP_CONFIG_PID
+	else if(key[2] == '\0') {
+		switch(key[0]) {
+		case 'T': switch(key[1]) {
+			case 'P': pi->tp = strtof(data, NULL); break;
+			case 'I': pi->ti = strtof(data, NULL); break;
+			case 'D': pi->td = strtof(data, NULL); break;
+			}
+			break;
+		case 'H': switch(key[1]) {
+			case 'P': pi->hp = strtof(data, NULL); break;
+			case 'I': pi->hi = strtof(data, NULL); break;
+			case 'D': pi->hd = strtof(data, NULL); break;
+			}
+			break;
+		}
+	}
+#endif
 
 	return MHD_YES;
 }
@@ -122,6 +143,10 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 
 	if(!strcmp(url, "/")) {
 		char *response = malloc(strlen(root_template)*2);
+#if HTTP_CONFIG_PID
+		float tp, ti, td, hp, hi, hd;
+		pid_getvalues(&tp, &ti, &td, &hp, &hi, &hd);
+#endif
 		sprintf(response,
 		        root_template,
 		        wanted_temperature,
@@ -130,6 +155,9 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 		        avg_humidity,
 		        sd_temperature,
 		        sd_humidity
+#if HTTP_CONFIG_PID
+				, tp, ti, td, hp, hi, hd
+#endif
 		        );
 		mhd_response = gzip_if_possible_buffer(connection,
 		                                       strlen(response),
@@ -195,6 +223,9 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 			pi->pp = MHD_create_post_processor(connection, 1024, iterate_post, pi);
 			pi->temp = NAN;
 			pi->hum = NAN;
+#if HTTP_CONFIG_PID
+			pi->tp = pi->ti = pi->td = pi->hp = pi->hi = pi->hd = NAN;
+#endif
 			*con_cls = pi;
 			return MHD_YES;
 		}
@@ -207,12 +238,21 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 			MHD_destroy_post_processor(pi->pp);
 		}
 
-		if(pi->temp == NAN || pi->hum == NAN) {
+		if(pi->temp == NAN || pi->hum == NAN
+#if HTTP_CONFIG_POST
+		   || pi->tp == NAN || pi->ti == NAN || pi->td == NAN
+		   || pi->hp == NAN || pi->hi == NAN || pi->hd == NAN
+#endif
+		   ) {
 			return MHD_NO;
 		}
 
 		float f_temp = pi->temp,
 			f_hum = pi->hum;
+#if HTTP_CONFIG_POST
+		pid_setvalues(pi->tp, pi->ti, pi->td,
+					  pi->hp, pi->hi, pi->hd);
+#endif
 		free(pi);
 
 		if(f_temp >= TEMP_MIN && f_temp <= TEMP_MAX &&
