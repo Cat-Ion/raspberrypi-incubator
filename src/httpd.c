@@ -29,7 +29,7 @@ char *root_template = NULL;
 
 struct postinfo {
 	float temp, hum;
-#if HTTP_CONFIG_PID
+#if defined(HTTP_CONFIG_PID) && HTTP_CONFIG_PID
 	float tp, ti, td, hp, hi, hd;
 #endif
 	struct MHD_PostProcessor *pp;
@@ -45,7 +45,7 @@ int iterate_post(void *cls, enum MHD_ValueKind kind, const char *key, const char
 	} else if(!strcmp(key, "hum")) {
 		pi->hum = strtof(data, NULL);
 	}
-#if HTTP_CONFIG_PID
+#if defined(HTTP_CONFIG_PID) && HTTP_CONFIG_PID
 	else if(key[2] == '\0') {
 		switch(key[0]) {
 		case 'T': switch(key[1]) {
@@ -143,7 +143,7 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 
 	if(!strcmp(url, "/")) {
 		char *response = malloc(strlen(root_template)*2);
-#if HTTP_CONFIG_PID
+#if defined(HTTP_CONFIG_PID) && HTTP_CONFIG_PID
 		float tp, ti, td, hp, hi, hd;
 		pid_getvalues(&tp, &ti, &td, &hp, &hi, &hd);
 #endif
@@ -155,7 +155,7 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 		        avg_humidity,
 		        sd_temperature,
 		        sd_humidity
-#if HTTP_CONFIG_PID
+#if defined(HTTP_CONFIG_PID) && HTTP_CONFIG_PID
 				, tp, ti, td, hp, hi, hd
 #endif
 		        );
@@ -223,7 +223,7 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 			pi->pp = MHD_create_post_processor(connection, 1024, iterate_post, pi);
 			pi->temp = NAN;
 			pi->hum = NAN;
-#if HTTP_CONFIG_PID
+#if defined(HTTP_CONFIG_PID) && HTTP_CONFIG_PID
 			pi->tp = pi->ti = pi->td = pi->hp = pi->hi = pi->hd = NAN;
 #endif
 			*con_cls = pi;
@@ -239,7 +239,7 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 		}
 
 		if(pi->temp == NAN || pi->hum == NAN
-#if HTTP_CONFIG_POST
+#if defined(HTTP_CONFIG_PID) && HTTP_CONFIG_PID
 		   || pi->tp == NAN || pi->ti == NAN || pi->td == NAN
 		   || pi->hp == NAN || pi->hi == NAN || pi->hd == NAN
 #endif
@@ -249,7 +249,7 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 
 		float f_temp = pi->temp,
 			f_hum = pi->hum;
-#if HTTP_CONFIG_POST
+#if defined(HTTP_CONFIG_PID) && HTTP_CONFIG_PID
 		pid_setvalues(pi->tp, pi->ti, pi->td,
 					  pi->hp, pi->hi, pi->hd);
 #endif
