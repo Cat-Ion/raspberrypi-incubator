@@ -31,10 +31,6 @@ Todo
   may either install one on the Raspberry Pi, or copy the contents of
   js/graph.js into html/root.html.
 
-- [musl](http://musl-libc.org) doesn't allow integers >= 10 for the %m$
-  format (yet), so the current implementation of the web interface
-  won't work with it
-
 Installation
 ------------
 
