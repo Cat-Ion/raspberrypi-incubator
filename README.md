@@ -14,7 +14,7 @@ wanted temperature and humidity levels.
 
 The master branch should always be in a stable state. Development
 takes place in the develop branch and all feature/* branches. The
-current stable version is 0.1.
+current stable version is 0.2.
 
 Feel free to send me a pull request if you have anything to
 contribute.
@@ -34,6 +34,8 @@ Todo
   have the builtin httpd handle that. If you don't have a httpd, you
   may either install one on the Raspberry Pi, or copy the contents of
   js/graph.js into html/root.html.
+
+- src/httpd.c could probably use a bit of refactoring...
 
 Installation
 ------------

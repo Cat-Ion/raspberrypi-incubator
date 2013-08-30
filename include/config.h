@@ -16,6 +16,9 @@
 #define PERIOD_DAY_S 60
 #define LOG_S 3600
 
+/* If this is configured, lets users configure the PID values over HTTP */
+#define HTTP_CONFIG_PID 1
+
 /* Minimum and maximum environment parameters for requests.
    
    For testudo hermanni boettgeri, the temperature range [26:33]

@@ -56,5 +56,10 @@ log_data_t *getdaylog(int *num);
 time_t lastlogtime();
 time_t lastdaylogtime();
 
+void pid_init();
 void pid_control(float temp, float hum);
+void pid_getvalues(float *tp, float *ti, float *td,
+                   float *hp, float *hi, float *hd);
+void pid_setvalues(float tp, float ti, float td,
+                   float hp, float hi, float hd);
 #endif
