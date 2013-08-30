@@ -32,6 +32,9 @@ int set_voltage(float v) {
 	if(v < 0) v = 0;
 	if(v > 1) v = 1;
 
+	/* Adjust for voltage drop through any transistors */
+	v = MIN_VOLTAGE + v * (1-MIN_VOLTAGE);
+
 	uint16_t volt = (uint16_t) (v * 4095);
 	volt <<= 4;
 

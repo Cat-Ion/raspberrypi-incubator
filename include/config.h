@@ -52,3 +52,11 @@
 #define H_I 0
 #define H_IMAX 100
 #define H_D 0
+
+/* Minimum DAC output (as a fraction of the maximum output) that results in a
+ * non-zero voltage on the load resistor.
+   This exists to take care of the voltage drop of transistors.
+   set_voltage() will take an input in [0:1] and transform it to something in
+   [MIN_VOLTAGE:1] before forwarding it to the DAC.
+ */
+#define MIN_VOLTAGE 0
