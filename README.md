@@ -35,6 +35,8 @@ Todo
   may either install one on the Raspberry Pi, or copy the contents of
   js/graph.js into html/root.html.
 
+- src/httpd.c could probably use a bit of refactoring...
+
 Installation
 ------------
 
