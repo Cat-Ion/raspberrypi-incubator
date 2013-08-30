@@ -12,6 +12,10 @@ There is a web interface to show a graph of the most recent data
 (together with average values and standard deviation) and change the
 wanted temperature and humidity levels.
 
+The master branch should always be in a stable state. Development
+takes place in the develop branch and all feature/* branches. The
+current stable version is 0.1.
+
 Feel free to send me a pull request if you have anything to
 contribute.
 
