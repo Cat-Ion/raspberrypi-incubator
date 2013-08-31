@@ -12,12 +12,6 @@ all: $(BIN)
 main: $(OBJ)
 	$(CC) $^ -o $@ $(LDFLAGS)
 
-sensortest: src/sensortest.o src/sensor.o src/i2c.o
-	$(CC) $^ -o $@ $(LDFLAGS)
-
-volttest: src/volttest.o src/sensor.o src/i2c.o
-	$(CC) $^ -o $@ $(LDFLAGS)
-
 clean:
 	rm -f src/*.o $(BIN)
 
