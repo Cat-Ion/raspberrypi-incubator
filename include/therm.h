@@ -56,6 +56,9 @@ log_data_t *getdaylog(int *num);
 time_t lastlogtime();
 time_t lastdaylogtime();
 
+int persistent_load();
+int persistent_write();
+
 void pid_init();
 void pid_control(float temp, float hum);
 void pid_getvalues(float *tp, float *ti, float *td,

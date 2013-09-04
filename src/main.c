@@ -4,14 +4,20 @@
 #include <time.h>
 #include "therm.h"
 
+void load_preferences();
+
 void end() {
 	i2c_end();
 	httpd_end();
 }
 
 void init() {
-	wanted_temperature = TEMP_DEF;
-	wanted_humidity = HUM_DEF;
+	/* Load persistent settings, or set the default values. */
+	if(persistent_load() == -1) {
+		wanted_temperature = TEMP_DEF;
+		wanted_humidity = HUM_DEF;
+	}
+
 	i2c_init();
 	httpd_init();
 	logs_init();
