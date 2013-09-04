@@ -60,3 +60,4 @@ Todo
 
 - src/httpd.c could probably use a bit of refactoring...
 
+- Change user/password through the web interface, and store them.
