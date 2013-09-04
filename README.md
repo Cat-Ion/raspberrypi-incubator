@@ -14,7 +14,7 @@ wanted temperature and humidity levels.
 
 The master branch should always be in a stable state. Development
 takes place in the develop branch and all feature/* branches. The
-current stable version is 0.3.
+current stable version is 0.4.
 
 Feel free to send me a pull request if you have anything to
 contribute.
@@ -60,3 +60,4 @@ Todo
 
 - src/httpd.c could probably use a bit of refactoring...
 
+- Change user/password through the web interface, and store them.

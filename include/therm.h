@@ -48,6 +48,7 @@ void delay_ns(struct timespec *last, time_t s, long ns);
 
 void stats();
 
+void logs_end();
 void logs_init();
 void log_values(float temp, float humidity);
 int logstdout(float data[2]);

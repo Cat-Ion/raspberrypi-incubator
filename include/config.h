@@ -4,6 +4,9 @@
 /* Path for the settings file */
 #define SAVEPATH "settings"
 
+/* Path for the log file written on exit */
+#define LOGPATH "log_tmp"
+
 /* Username and password for the web interface */
 #define USER "admin"
 #define PASS "password"

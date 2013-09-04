@@ -4,11 +4,11 @@
 #include <time.h>
 #include "therm.h"
 
-void load_preferences();
-
 void end() {
+	logs_end();
 	i2c_end();
 	httpd_end();
+	exit(0);
 }
 
 void init() {
@@ -31,8 +31,17 @@ void init() {
 
 	sigemptyset(&(sa.sa_mask));
 	sigaddset(&(sa.sa_mask), SIGUSR1);
+	sigaddset(&(sa.sa_mask), SIGINT);
+	sigaddset(&(sa.sa_mask), SIGTERM);
 
 	if(sigaction(SIGUSR1, &sa, NULL) < 0) {
+		fprintf(stderr, "Couldn't install signal handler.\n");
+		exit(1);
+	}
+
+	sa.sa_handler = &end;
+	
+	if(sigaction(SIGTERM, &sa, NULL) < 0 || sigaction(SIGINT, &sa, NULL) < 0) {
 		fprintf(stderr, "Couldn't install signal handler.\n");
 		exit(1);
 	}
