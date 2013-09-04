@@ -42,7 +42,7 @@ static void sortlogs() {
 	sorted = 1;
 }
 
-void logs_load() {
+static void logs_load() {
 	FILE *f = fopen(LOGPATH, "r");
 	
 	if(f == NULL) {
@@ -78,7 +78,7 @@ void logs_load() {
 	fclose(f);
 }
 
-void logs_save() {
+static void logs_save() {
 	FILE *f = fopen(LOGPATH, "w+");
 	int n;
 	if(f == NULL) {
@@ -129,7 +129,6 @@ static void formattime(char *buf, size_t len) {
 }
 
 void log_values(float temp, float humidity) {
-
 	log_data[log_num%LOG_SIZE].timestamp = time(NULL);
 	log_data[log_num%LOG_SIZE].temperature = temp;
 	log_data[log_num%LOG_SIZE].humidity = humidity;

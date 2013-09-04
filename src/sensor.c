@@ -1,6 +1,6 @@
 #include "therm.h"
 
-uint16_t crc16(uint8_t *data, size_t len, uint8_t low, uint8_t high) {
+static uint16_t crc16(uint8_t *data, size_t len, uint8_t low, uint8_t high) {
 	uint16_t crc = 0xFFFF;
 	while(len--) {
 		crc ^= *data++;

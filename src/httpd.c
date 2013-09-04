@@ -73,7 +73,7 @@ struct postinfo {
 	struct MHD_PostProcessor *pp;
 };
 
-void add_expires_header(struct MHD_Response *res, time_t exptime) {
+static void add_expires_header(struct MHD_Response *res, time_t exptime) {
 	char buf[64];
 	struct tm tm;
 
@@ -87,7 +87,7 @@ void add_expires_header(struct MHD_Response *res, time_t exptime) {
 	MHD_add_response_header(res, "Expires", buf);
 }
 
-char *format_logs(log_data_t *data, int num, size_t *len) {
+static char *format_logs(log_data_t *data, int num, size_t *len) {
 		char *response = malloc(
 		                        strlen("{\n\"logdata\": [\n")
 		                        + num * strlen("\t[ \"YYYY-MM-DDThh:mm:ss.000+ZZZZ\", tt.tt, hhh.hh ],\n")
@@ -119,7 +119,7 @@ char *format_logs(log_data_t *data, int num, size_t *len) {
 		return response;
 }
 
-struct MHD_Response *gzip_if_possible_buffer(struct MHD_Connection *connection,
+static struct MHD_Response *gzip_if_possible_buffer(struct MHD_Connection *connection,
                                              size_t len,
                                              void *response,
                                              int flags) {
@@ -139,7 +139,7 @@ struct MHD_Response *gzip_if_possible_buffer(struct MHD_Connection *connection,
 	}
 }
 
-int iterate_post(void *cls, enum MHD_ValueKind kind, const char *key, const char *filename, const char *content_type, const char *transfer_encoding, const char *data, uint64_t off, size_t size) {
+static int iterate_post(void *cls, enum MHD_ValueKind kind, const char *key, const char *filename, const char *content_type, const char *transfer_encoding, const char *data, uint64_t off, size_t size) {
 	struct postinfo *pi = cls;
 	if(size == 0) {
 		return MHD_YES;
@@ -171,7 +171,7 @@ int iterate_post(void *cls, enum MHD_ValueKind kind, const char *key, const char
 	return MHD_YES;
 }
 
-void maybe_resize(void **ptr, size_t size, int *num, int *max) {
+static void maybe_resize(void **ptr, size_t size, int *num, int *max) {
 	void *tmp;
 	if(*num == *max) {
 		*max *= 2;
@@ -184,7 +184,7 @@ void maybe_resize(void **ptr, size_t size, int *num, int *max) {
 	}
 }
 
-void parse_template(struct template *tgt, char *src) {
+static void parse_template(struct template *tgt, char *src) {
 	char *pos = src,
 		*next;
 	int max = 8;
@@ -280,7 +280,7 @@ void parse_template(struct template *tgt, char *src) {
 	}
 }
 
-char *use_template(struct template *tgt) {
+static char *use_template(struct template *tgt) {
 	char *ret = malloc(tgt->maxsize);
 	char *pos = ret;
 

@@ -42,7 +42,7 @@ void pid_setvalues(float tp, float ti, float td,
 	pid_hum.d  = hd;
 }
 
-float temp_control(float temp) {
+static float temp_control(float temp) {
 	float diff = temp - wanted_temperature;
 
 	pid_temp.acc += diff * PERIOD_S;

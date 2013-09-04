@@ -4,14 +4,14 @@
 #include <time.h>
 #include "therm.h"
 
-void end() {
+static void end() {
 	logs_end();
 	i2c_end();
 	httpd_end();
 	exit(0);
 }
 
-void init() {
+static void init() {
 	/* Load persistent settings, or set the default values. */
 	if(persistent_load() == -1) {
 		wanted_temperature = TEMP_DEF;
@@ -47,7 +47,7 @@ void init() {
 	}
 }
 
-void reload(int signal) {
+static void reload(int signal) {
 	httpd_reload();
 }
 
