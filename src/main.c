@@ -12,10 +12,11 @@ void end() {
 }
 
 void init() {
-	wanted_temperature = TEMP_DEF;
-	wanted_humidity = HUM_DEF;
-
-	load_preferences();
+	/* Load persistent settings, or set the default values. */
+	if(persistent_load() == -1) {
+		wanted_temperature = TEMP_DEF;
+		wanted_humidity = HUM_DEF;
+	}
 
 	i2c_init();
 	httpd_init();
@@ -35,10 +36,6 @@ void init() {
 		fprintf(stderr, "Couldn't install signal handler.\n");
 		exit(1);
 	}
-}
-
-void load_preferences() {
-	return;
 }
 
 void reload(int signal) {

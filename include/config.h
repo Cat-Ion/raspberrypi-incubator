@@ -1,6 +1,9 @@
 /* The port for the web interface */
 #define PORT 8877
 
+/* Path for the settings file */
+#define SAVEPATH "settings"
+
 /* Username and password for the web interface */
 #define USER "admin"
 #define PASS "password"

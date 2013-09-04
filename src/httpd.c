@@ -433,6 +433,8 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 			wanted_humidity = f_hum;
 		}
 
+		persistent_write();
+
 		mhd_response = MHD_create_response_from_data(0, NULL, MHD_NO, MHD_NO);
 		ret = MHD_queue_response(connection, MHD_HTTP_FOUND, mhd_response);
 		MHD_add_response_header(mhd_response, "Location", "/");
