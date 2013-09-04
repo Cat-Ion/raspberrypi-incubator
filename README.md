@@ -19,24 +19,6 @@ current stable version is 0.2.
 Feel free to send me a pull request if you have anything to
 contribute.
 
-Todo
-----
-
-- The control part is not actually done yet, but will use a 1 ohm
-  resistor on the DAC to increase the temperature and most likely an
-  ultrasonic fogger over a relay connected to a GPIO pin for the
-  humidity control.
-
-- Maybe a webcam with motion detection for when the eggs start
-  hatching?
-
-- Right now, the javascript is served over an external page. Maybe
-  have the builtin httpd handle that. If you don't have a httpd, you
-  may either install one on the Raspberry Pi, or copy the contents of
-  js/graph.js into html/root.html.
-
-- src/httpd.c could probably use a bit of refactoring...
-
 Installation
 ------------
 
@@ -59,4 +41,22 @@ Installation
 
 - Run main in the same directory where you copied your root.html. It
   should start printing its log data to the standard output.
+
+Todo
+----
+
+- The control part is not actually done yet, but will use a 1 ohm
+  resistor on the DAC to increase the temperature and most likely an
+  ultrasonic fogger over a relay connected to a GPIO pin for the
+  humidity control.
+
+- Maybe a webcam with motion detection for when the eggs start
+  hatching?
+
+- Right now, the javascript is served over an external page. Maybe
+  have the builtin httpd handle that. If you don't have a httpd, you
+  may either install one on the Raspberry Pi, or copy the contents of
+  js/graph.js into html/root.html.
+
+- src/httpd.c could probably use a bit of refactoring...
 
