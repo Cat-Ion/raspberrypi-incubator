@@ -15,6 +15,8 @@ log_data_t log_data[LOG_SIZE],
 	log_sorted[LOG_SIZE],
 	log_day_sorted[LOG_DAY_SIZE];
 
+float smoothed_temp = 0, smoothed_hum = 0;
+
 static void sortlogs() {
 	if(sorted) {
 		return;
@@ -65,11 +67,19 @@ void logs_load() {
 		log_sorted[i] = log_day_data[i];
 	}
 
+	if(log_day_num > 0) {
+		smoothed_temp = log_day_data[log_day_num-1].temperature;
+		smoothed_hum = log_day_data[log_day_num-1].humidity;
+	} else if(log_num > 0) {
+		smoothed_temp = log_data[log_num-1].temperature;
+		smoothed_hum = log_data[log_num-1].humidity;
+	}
+
 	fclose(f);
 }
 
 void logs_save() {
-	FILE *f = fopen(LOGPATH, "w");
+	FILE *f = fopen(LOGPATH, "w+");
 	int n;
 	if(f == NULL) {
 		return;
@@ -119,7 +129,6 @@ static void formattime(char *buf, size_t len) {
 }
 
 void log_values(float temp, float humidity) {
-	static float smoothed_temp = 0, smoothed_hum = 0;
 
 	log_data[log_num%LOG_SIZE].timestamp = time(NULL);
 	log_data[log_num%LOG_SIZE].temperature = temp;
