@@ -1,5 +1,6 @@
 #include "therm.h"
 
+/* checksum for the sensor's returned data, returns 0 for invalid CRCs */
 static uint16_t crc16(uint8_t *data, size_t len, uint8_t low, uint8_t high) {
 	uint16_t crc = 0xFFFF;
 	while(len--) {
@@ -16,6 +17,9 @@ static uint16_t crc16(uint8_t *data, size_t len, uint8_t low, uint8_t high) {
 	return crc == (low | (high << 8));
 }
 
+/* Reads the humidity into buf[0], temperature into buf[1]. Tries up
+   to 5 times, then returns 0 if there was no valid data, or 1
+   otherwise. */
 int read_data(float buf[2]) {
 	static uint8_t cmd[3] = { 0x03, 0x00, 0x04 };
 	uint8_t response[8];
