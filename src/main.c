@@ -12,16 +12,16 @@ static void end() {
 }
 
 static void init() {
+	i2c_init();
+	httpd_init();
+	logs_init();
+	pid_init();
+
 	/* Load persistent settings, or set the default values. */
 	if(persistent_load() == -1) {
 		wanted_temperature = TEMP_DEF;
 		wanted_humidity = HUM_DEF;
 	}
-
-	i2c_init();
-	httpd_init();
-	logs_init();
-	pid_init();
 
 	struct sigaction sa = (struct sigaction) {
 		.sa_handler = &reload,
@@ -34,11 +34,13 @@ static void init() {
 	sigaddset(&(sa.sa_mask), SIGINT);
 	sigaddset(&(sa.sa_mask), SIGTERM);
 
+	/* Catch USR1, and reload settings */
 	if(sigaction(SIGUSR1, &sa, NULL) < 0) {
 		fprintf(stderr, "Couldn't install signal handler.\n");
 		exit(1);
 	}
 
+	/* Catch INT and TERM, then quit gracefully */
 	sa.sa_handler = &end;
 	
 	if(sigaction(SIGTERM, &sa, NULL) < 0 || sigaction(SIGINT, &sa, NULL) < 0) {
