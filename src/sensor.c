@@ -21,7 +21,7 @@ static uint16_t crc16(uint8_t *data, size_t len, uint8_t low, uint8_t high) {
    to 5 times, then returns 0 if there was no valid data, or 1
    otherwise. */
 int read_data(float buf[2]) {
-	static uint8_t cmd[3] = { 0x03, 0x00, 0x04 };
+	const uint8_t cmd[3] = { 0x03, 0x00, 0x04 };
 	uint8_t response[8];
 
 	int valid = 0;
