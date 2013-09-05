@@ -4,6 +4,10 @@
 #include <time.h>
 #include "therm.h"
 
+static void end();
+static void init();
+static void reload();
+
 static void end() {
 	logs_end();
 	i2c_end();

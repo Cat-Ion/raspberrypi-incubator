@@ -26,10 +26,6 @@ float sd_day_humidity;
 float wanted_temperature;
 float wanted_humidity;
 
-void init();
-void end();
-void reload();
-
 void httpd_init();
 void httpd_end();
 void httpd_reload();
