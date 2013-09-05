@@ -140,7 +140,9 @@ static void formattime(char *buf, size_t len) {
 void log_values(float temp, float humidity) {
 	log_data[log_num%LOG_SIZE].timestamp = time(NULL);
 	log_data[log_num%LOG_SIZE].temperature = temp;
+	log_data[log_num%LOG_SIZE].temperature_ref = wanted_temperature;
 	log_data[log_num%LOG_SIZE].humidity = humidity;
+	log_data[log_num%LOG_SIZE].humidity_ref = wanted_humidity;
 
 	if(log_num == 0) {
 		smoothed_temp = temp;
@@ -152,7 +154,9 @@ void log_values(float temp, float humidity) {
 	if((log_data[log_num%LOG_SIZE].timestamp % PERIOD_DAY_S) < PERIOD_S) {
 		log_day_data[log_day_num % LOG_DAY_SIZE].timestamp = time(NULL);
 		log_day_data[log_day_num % LOG_DAY_SIZE].temperature = smoothed_temp;
+		log_day_data[log_day_num % LOG_DAY_SIZE].temperature_ref = wanted_temperature;
 		log_day_data[log_day_num % LOG_DAY_SIZE].humidity = smoothed_hum;
+		log_day_data[log_day_num % LOG_DAY_SIZE].humidity_ref = wanted_humidity;
 		log_day_num++;
 	}
 	log_num++;

@@ -8,7 +8,9 @@
 typedef struct {
 	time_t timestamp;
 	float temperature;
+	float temperature_ref;
 	float humidity;
+	float humidity_ref;
 } log_data_t;
 
 float avg_temperature;

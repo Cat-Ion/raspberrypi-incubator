@@ -94,7 +94,7 @@ static void add_expires_header(struct MHD_Response *res, time_t exptime) {
 static char *format_logs(log_data_t *data, int num, size_t *len) {
 		char *response = malloc(
 		                        strlen("{\n\"logdata\": [\n")
-		                        + num * strlen("\t[ \"YYYY-MM-DDThh:mm:ss.000+ZZZZ\", tt.tt, hhh.hh ],\n")
+		                        + num * strlen("\t[ \"YYYY-MM-DDThh:mm:ss.000+ZZZZ\", tt.tt, tt.tt, hhh.hh, hhh.hh ],\n")
 		                        + strlen("],\n")
 		                        + strlen("\"temp\": [ ttt.t, t.tt, ttt.t ],\n")
 		                        + strlen("\"hum\":  [ hhh.h, h.hh, hhh.h ]\n")
@@ -108,9 +108,11 @@ static char *format_logs(log_data_t *data, int num, size_t *len) {
 
 			*len += sprintf (response + *len, "\t[ \"");
 			*len += strftime(response + *len, 32, "%Y-%m-%dT%H:%M:%S.000%z", &tm);
-			*len += sprintf (response + *len, "\", %5.2f, %6.2f ]%c\n",
+			*len += sprintf (response + *len, "\", %5.2f, %5.2f, %6.2f, %6.2f ]%c\n",
 							 data[i].temperature,
+							 data[i].temperature_ref,
 							 data[i].humidity,
+							 data[i].humidity_ref,
 							 ", "[i == (num - 1)]);
 		}
 		*len += sprintf(response + *len,

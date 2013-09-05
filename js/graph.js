@@ -12,8 +12,16 @@ var gettemp = function (a) {
 	return a[1];
 };
 
-var gethum = function (a) {
+var gettempref = function (a) {
 	return a[2];
+};
+
+var gethum = function (a) {
+	return a[3];
+};
+
+var gethumref = function (a) {
+	return a[4];
 };
 
 var gettics = function(min, max, range, density_t) {
@@ -110,13 +118,13 @@ var gettics = function(min, max, range, density_t) {
 }
 
 var drawgraph = function(ctx,
-			  px_x_min, px_x_max,
-			  px_y_min, px_y_max,
-			  data,
-			  data_x_min, data_x_max,
-			  data_y_min, data_y_max,
-			  getx, gety
-			 ) {
+						 px_x_min, px_x_max,
+						 px_y_min, px_y_max,
+						 data,
+						 data_x_min, data_x_max,
+ 						 data_y_min, data_y_max,
+						 getx, gety, 
+						 color) {
 	var i;
 	var px_x_diff = px_x_max - px_x_min;
 	var px_y_diff = px_y_max - px_y_min;
@@ -129,7 +137,7 @@ var drawgraph = function(ctx,
 
 	ctx.strokeRect(px_x_min, px_y_min, px_x_diff, px_y_diff);
 
-	ctx.strokeStyle = "#FF0000";
+	ctx.strokeStyle = color;
 	ctx.lineWidth = 1;
 	
 	i = 0;
@@ -214,7 +222,14 @@ var graph = function(id,
 			  data,
 			  0, time,
 			  ymin, ymax,
-			  gettime, gettemp);
+			  gettime, gettemp, '#FF0000');
+	
+	drawgraph(ctx, leftpadding, width - rightpadding,
+			  vertpadding, vertpadding + boxheight,
+			  data,
+			  0, time,
+			  ymin, ymax,
+			  gettime, gettempref, '#0000FF');
 	
 	ymin = Math.floor(humlim[0]*5-1)/5;
 	ymax = Math.ceil(humlim[1]*5+1)/5;
@@ -231,7 +246,13 @@ var graph = function(id,
 			  data,
 			  0, time,
 			  Math.floor(humlim[0]*2-1)/2, Math.ceil(humlim[1]*2+1)/2,
-			  gettime, gethum);
+			  gettime, gethum, '#FF0000');
+	drawgraph(ctx, leftpadding, width - rightpadding,
+			  vertpadding + boxheight + midpadding, height - vertpadding,
+			  data,
+			  0, time,
+			  Math.floor(humlim[0]*2-1)/2, Math.ceil(humlim[1]*2+1)/2,
+			  gettime, gethumref, '#0000FF');
 
 	var timescale = time <= 60 ? 1 : time <= 3600 ? 300 : 3600;
 	var timestart = Math.ceil( (Date.now()/1000 - time) / timescale )*timescale - Date.now() / 1000;
@@ -263,11 +284,17 @@ var update = function () {
 	data = data.logdata.map(function(d) {
 		if(d[1] < templim_h[0]) { templim_h[0] = d[1]; }
 		if(d[1] > templim_h[1]) { templim_h[1] = d[1]; }
-		if(d[2] < humlim_h[0]) { humlim_h[0] = d[2]; }
-		if(d[2] > humlim_h[1]) { humlim_h[1] = d[2]; }
+		if(d[2] < templim_h[0]) { templim_h[0] = d[2]; }
+		if(d[2] > templim_h[1]) { templim_h[1] = d[2]; }
+		if(d[3] < humlim_h[0]) { humlim_h[0] = d[3]; }
+		if(d[3] > humlim_h[1]) { humlim_h[1] = d[3]; }
+		if(d[4] < humlim_h[0]) { humlim_h[0] = d[4]; }
+		if(d[4] > humlim_h[1]) { humlim_h[1] = d[4]; }
 		return [ 3600 + (Date.parse(d[0]) - now)/1000,
 				 d[1],
-				 d[2]
+				 d[2],
+				 d[3],
+				 d[4]
 			   ]; });
 	graph('graph', 3600, data, templim_h, humlim_h);
 };
@@ -280,11 +307,17 @@ var day_update = function () {
 	day_data = day_data.logdata.map(function(d) {
 		if(d[1] < templim_d[0]) { templim_d[0] = d[1]; }
 		if(d[1] > templim_d[1]) { templim_d[1] = d[1]; }
-		if(d[2] < humlim_d[0]) { humlim_d[0] = d[2]; }
-		if(d[2] > humlim_d[1]) { humlim_d[1] = d[2]; }
+		if(d[2] < templim_d[0]) { templim_d[0] = d[2]; }
+		if(d[2] > templim_d[1]) { templim_d[1] = d[2]; }
+		if(d[3] < humlim_d[0]) { humlim_d[0] = d[3]; }
+		if(d[3] > humlim_d[1]) { humlim_d[1] = d[3]; }
+		if(d[4] < humlim_d[0]) { humlim_d[0] = d[4]; }
+		if(d[4] > humlim_d[1]) { humlim_d[1] = d[4]; }
 		return [ 24*3600 + (Date.parse(d[0]) - now)/1000,
 				 d[1],
-				 d[2]
+				 d[2],
+				 d[3],
+				 d[4]
 			   ]; });
 	graph('day_graph', 24*3600, day_data, templim_d, humlim_d);
 };
