@@ -1,6 +1,8 @@
 #include <math.h>
 #include "therm.h"
 
+/* Calculate the mean and standard deviation for the num data points
+   in data, and put the results into the four float pointers. */
 void stats_data(log_data_t *data, int num,
 				float *avg_temp, float *avg_hum,
 				float *std_temp, float *std_hum) {
@@ -27,6 +29,8 @@ void stats_data(log_data_t *data, int num,
 	*std_hum = sqrt(h/num);
 }
 
+/* Calculate the mean and standard deviation for the recent and daily
+   logs, writing them to the global variables defined in therm.h */
 void stats() {
 	log_data_t *data;
 	int num;

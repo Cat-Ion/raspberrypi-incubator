@@ -73,6 +73,7 @@ struct postinfo {
 	struct MHD_PostProcessor *pp;
 };
 
+/* Adds an Expires header with the given time */
 static void add_expires_header(struct MHD_Response *res, time_t exptime) {
 	char buf[64];
 	struct tm tm;
@@ -87,6 +88,9 @@ static void add_expires_header(struct MHD_Response *res, time_t exptime) {
 	MHD_add_response_header(res, "Expires", buf);
 }
 
+/* Formats the given log data into a json string, and add the
+   statistics for the recent temperature and humidity data. *len will
+   contain the size of the string. */
 static char *format_logs(log_data_t *data, int num, size_t *len) {
 		char *response = malloc(
 		                        strlen("{\n\"logdata\": [\n")
@@ -119,6 +123,9 @@ static char *format_logs(log_data_t *data, int num, size_t *len) {
 		return response;
 }
 
+/* gzips a string if the client has 'deflate' in its accepted
+   encodings. Returns an MHD response containing the proper headers
+   for either situation. */
 static struct MHD_Response *gzip_if_possible_buffer(struct MHD_Connection *connection,
                                              size_t len,
                                              void *response,
@@ -139,6 +146,7 @@ static struct MHD_Response *gzip_if_possible_buffer(struct MHD_Connection *conne
 	}
 }
 
+/* Reads POST data into cls */
 static int iterate_post(void *cls, enum MHD_ValueKind kind, const char *key, const char *filename, const char *content_type, const char *transfer_encoding, const char *data, uint64_t off, size_t size) {
 	struct postinfo *pi = cls;
 	if(size == 0) {
@@ -171,6 +179,8 @@ static int iterate_post(void *cls, enum MHD_ValueKind kind, const char *key, con
 	return MHD_YES;
 }
 
+/* Resize an array, if it is necessary. size is the size of one
+   element. */
 static void maybe_resize(void **ptr, size_t size, int *num, int *max) {
 	void *tmp;
 	if(*num == *max) {
@@ -184,6 +194,7 @@ static void maybe_resize(void **ptr, size_t size, int *num, int *max) {
 	}
 }
 
+/* Parses a template for later use with use_template() */
 static void parse_template(struct template *tgt, char *src) {
 	char *pos = src,
 		*next;
@@ -280,6 +291,8 @@ static void parse_template(struct template *tgt, char *src) {
 	}
 }
 
+/* Formats some html using the given template and the current data
+   (logs, statistics, wanted values...) */
 static char *use_template(struct template *tgt) {
 	char *ret = malloc(tgt->maxsize);
 	char *pos = ret;
@@ -323,6 +336,7 @@ static char *use_template(struct template *tgt) {
 	return ret;
 }
 
+/* Handles every client connection */
 static int handle_conn(void *cls, struct MHD_Connection *connection, 
                        const char *url, 
                        const char *method, const char *version, 
@@ -331,6 +345,7 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 	struct MHD_Response *mhd_response;
 	int ret = MHD_NO;
 
+	/* Index page. Format the root template */
 	if(!strcmp(url, "/")) {
 		char *response = use_template(root);
 		mhd_response = gzip_if_possible_buffer(connection,
@@ -344,6 +359,7 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 		return ret;
 	}
 
+	/* Recent logs */
 	else if(!strcmp(url, "/log.json")) {
 		int num;
 		size_t len;
@@ -357,7 +373,8 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 		MHD_destroy_response(mhd_response);
 		return ret;
 	}
-
+	
+	/* Daily logs */
 	else if(!strcmp(url, "/daylog.json")) {
 		int num;
 		size_t len;
@@ -372,11 +389,14 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 		return ret;
 	}
 
+	/* Admin settings */
 	else if(!strcmp(url, "/set")) {
+		/* Has to be POST */
 		if(strcmp(method, "POST")) {
 			return(MHD_NO);
 		}
 
+		/* Validate authentication */
 		char *user = NULL,
 			*pass = NULL;
 		user = MHD_basic_auth_get_username_password(connection, &pass);
@@ -391,6 +411,7 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 			return ret;
 		}
 
+		/* Initialize the postinfo structure if necessary */
 		struct postinfo *pi = *con_cls;
 		if(pi == NULL) {
 			pi = malloc(sizeof(struct postinfo));
@@ -402,6 +423,7 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 			return MHD_YES;
 		}
 
+		/* Get POST data containing the new settings until there's nothing left */
 		if(*upload_data_size) {
 			MHD_post_process(pi->pp, upload_data, *upload_data_size);
 			*upload_data_size = 0;
@@ -410,6 +432,7 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 			MHD_destroy_post_processor(pi->pp);
 		}
 
+		/* Validate the POST data and possibly return an error */
 		if(pi->temp == NAN || pi->hum == NAN
 #if defined(HTTP_CONFIG_PID) && HTTP_CONFIG_PID
 		   || pi->tp == NAN || pi->ti == NAN || pi->td == NAN
@@ -419,22 +442,28 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 			return MHD_NO;
 		}
 
-		float f_temp = pi->temp,
-			f_hum = pi->hum;
 #if defined(HTTP_CONFIG_PID) && HTTP_CONFIG_PID
+		/* Set the PID parameters */
 		pid_setvalues(pi->tp, pi->ti, pi->td,
 					  pi->hp, pi->hi, pi->hd);
 #endif
+
+		float f_temp = pi->temp,
+			f_hum = pi->hum;
 		free(pi);
 
+		/* If the temperature and humidity parameters are sane, use
+		   them. */
 		if(f_temp >= TEMP_MIN && f_temp <= TEMP_MAX &&
 		   f_hum  >= HUM_MIN && f_hum  <= HUM_MAX) {
 			wanted_temperature = f_temp;
 			wanted_humidity = f_hum;
 		}
 
+		/* Write settings to storage */
 		persistent_write();
 
+		/* Redirect to the index */
 		mhd_response = MHD_create_response_from_data(0, NULL, MHD_NO, MHD_NO);
 		ret = MHD_queue_response(connection, MHD_HTTP_FOUND, mhd_response);
 		MHD_add_response_header(mhd_response, "Location", "/");
@@ -442,6 +471,7 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 		return ret;
 	}
 
+	/* 404 */
 	else {
 		ret = MHD_queue_response(connection, MHD_HTTP_NOT_FOUND, mhd_404_response);
 		return ret;
@@ -449,6 +479,8 @@ static int handle_conn(void *cls, struct MHD_Connection *connection,
 }
 
 /* Exposed functions start here */
+
+/* Start the daemon, initialize canned responses, load template */
 void httpd_init() {
 	daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY|MHD_USE_DEBUG, PORT, NULL, NULL,
 	                          &handle_conn, NULL, MHD_OPTION_END);
@@ -469,12 +501,14 @@ void httpd_init() {
 	httpd_reload();
 }
 
+/* Stop the daemon, destroy canned responses */
 void httpd_end() {
 	MHD_stop_daemon(daemon);
 	MHD_destroy_response(mhd_404_response);
 	MHD_destroy_response(mhd_please_auth_response);
 }
 
+/* Parses the root template */
 void httpd_reload() {
 	char *root_template = NULL;
 

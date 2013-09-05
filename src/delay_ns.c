@@ -3,6 +3,9 @@
 #include <time.h>
 #include "therm.h"
 
+/* Delay s+ns/1e9 seconds, starting from the time stored in
+   *last. Repeated calls to this should eliminate jitter as much as
+   possible. */
 void delay_ns(struct timespec *last, time_t s, long ns) {
 	int ret;
 	last->tv_sec += s + (last->tv_nsec + ns) / 1000000000L;

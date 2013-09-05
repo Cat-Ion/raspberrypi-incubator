@@ -11,6 +11,7 @@
 
 int fd;
 
+/* Opens the i2c device for writing */
 void i2c_init() {
 	fflush(stdout);
 	fd = open("/dev/i2c-1", O_RDWR);
@@ -21,10 +22,12 @@ void i2c_init() {
 	}
 }
 
+/* Closes the i2c device */
 void i2c_end() {
 	close(fd);
 }
 
+/* Sends the len bytes stored in data to the i2c device at addr */
 size_t i2c_send(uint8_t addr, uint8_t *data, size_t len) {
 	if(ioctl(fd, I2C_SLAVE, addr) < 0) {
 		perror("Failed to acquire bus access and/or talk to slave.\n");
@@ -33,6 +36,7 @@ size_t i2c_send(uint8_t addr, uint8_t *data, size_t len) {
 	return write(fd, data, len);
 }
 
+/* Reads len bytes from the i2c device at addr into out */
 size_t i2c_read(uint8_t addr, size_t len, uint8_t *out) {
 	if(ioctl(fd, I2C_SLAVE, addr) < 0) {
 		perror("Failed to acquire bus access and/or talk to slave.\n");
