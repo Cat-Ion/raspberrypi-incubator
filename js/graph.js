@@ -132,12 +132,17 @@ var drawgraph = function(ctx,
 	ctx.strokeStyle = "#FF0000";
 	ctx.lineWidth = 1;
 	
+	i = 0;
+	while(getx(data[i]) < 0) {
+		i++;
+	}
+
 	ctx.beginPath();
 	ctx.moveTo(
-			px_x_min + (getx(data[0]) - data_x_min) * px_x_diff/data_x_diff,
-			px_y_max - (gety(data[0]) - data_y_min) * px_y_diff/data_y_diff
+			px_x_min + (getx(data[i]) - data_x_min) * px_x_diff/data_x_diff,
+			px_y_max - (gety(data[i]) - data_y_min) * px_y_diff/data_y_diff
 	);
-	i = 1;
+	i++;
 	while(i < data.length) {
 		ctx.lineTo(
 			px_x_min + (getx(data[i]) - data_x_min) * px_x_diff/data_x_diff,
