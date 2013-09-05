@@ -17,6 +17,8 @@ log_data_t log_data[LOG_SIZE],
 
 float smoothed_temp = 0, smoothed_hum = 0;
 
+/* Sorts the recent and daily logs into log_sorted and log_day_sorted,
+   if necessary. */
 static void sortlogs() {
 	if(sorted) {
 		return;
@@ -42,6 +44,7 @@ static void sortlogs() {
 	sorted = 1;
 }
 
+/* Loads logs from persistent storage */
 static void logs_load() {
 	FILE *f = fopen(LOGPATH, "r");
 	
@@ -78,6 +81,7 @@ static void logs_load() {
 	fclose(f);
 }
 
+/* Writes logs to persistent storage. */
 static void logs_save() {
 	FILE *f = fopen(LOGPATH, "w+");
 	int n;
@@ -110,10 +114,12 @@ static void logs_save() {
 	fclose(f);
 }
 
+/* Prepares for exiting */
 void logs_end() {
 	logs_save();
 }
 
+/* Sets log numbers to 0, then tries loading old logs */
 void logs_init() {
 	log_num = 0;
 	log_day_num = 0;
@@ -121,6 +127,8 @@ void logs_init() {
 
 	logs_load();
 }
+
+/* Formats the current time */
 static void formattime(char *buf, size_t len) {
 	time_t t = time(NULL);
 	struct tm now;
@@ -128,6 +136,7 @@ static void formattime(char *buf, size_t len) {
 	strftime(buf, len, "%Y-%m-%d_%H:%M:%S", &now);
 }
 
+/* Adds the given values to the logs */
 void log_values(float temp, float humidity) {
 	log_data[log_num%LOG_SIZE].timestamp = time(NULL);
 	log_data[log_num%LOG_SIZE].temperature = temp;
@@ -150,6 +159,7 @@ void log_values(float temp, float humidity) {
 	sorted = 0;
 }
 
+/* Prints the given data to stdout */
 int logstdout(float data[2]) {
 	char timestr[64];
 	formattime(timestr, sizeof(timestr));
@@ -157,18 +167,21 @@ int logstdout(float data[2]) {
 	return fflush(stdout);
 }
 
+/* Gets the most recent log data, writes the log size to *num */
 log_data_t *getlog(int *num) {
 	sortlogs();
 	*num = (log_num < LOG_SIZE) ? log_num : LOG_SIZE;
 	return log_sorted;
 }
 
+/* Gets the most recent daily log data, writes the log size to *num */
 log_data_t *getdaylog(int *num) {
 	sortlogs();
 	*num = (log_day_num < LOG_DAY_SIZE) ? log_day_num : LOG_DAY_SIZE;
 	return log_day_sorted;
 }
 
+/* Last time the normal log was written to */
 time_t lastlogtime() {
 	if(log_num == 0) {
 		return 0;
@@ -176,6 +189,7 @@ time_t lastlogtime() {
 	return log_data[(log_num-1)%LOG_SIZE].timestamp;
 }
 
+/* Last time the daily log was written to */
 time_t lastdaylogtime() {
 	if(log_day_num == 0) {
 		return 0;
