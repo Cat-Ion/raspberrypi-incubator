@@ -43,6 +43,5 @@ int persistent_write() {
 
 	fclose(f);
 
-	fprintf(stderr, "Done.\n");
 	return ret;
 }
