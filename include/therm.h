@@ -34,7 +34,7 @@ void httpd_reload();
 
 void i2c_init();
 void i2c_end();
-size_t i2c_send(uint8_t addr, uint8_t *data, size_t len);
+size_t i2c_send(uint8_t addr, const uint8_t *data, size_t len);
 size_t i2c_read(uint8_t addr, size_t len, uint8_t *out);
 
 int read_data(float buf[2]);

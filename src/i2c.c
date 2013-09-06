@@ -28,7 +28,7 @@ void i2c_end() {
 }
 
 /* Sends the len bytes stored in data to the i2c device at addr */
-size_t i2c_send(uint8_t addr, uint8_t *data, size_t len) {
+size_t i2c_send(uint8_t addr, const uint8_t *data, size_t len) {
 	if(ioctl(fd, I2C_SLAVE, addr) < 0) {
 		perror("Failed to acquire bus access and/or talk to slave.\n");
 		exit(1);
