@@ -64,4 +64,6 @@ void pid_getvalues(float *tp, float *ti, float *td,
                    float *hp, float *hi, float *hd);
 void pid_setvalues(float tp, float ti, float td,
                    float hp, float hi, float hd);
+
+char *loadfile(const char *name);
 #endif

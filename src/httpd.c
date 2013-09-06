@@ -1,17 +1,11 @@
 #include <errno.h>
-#include <fcntl.h>
 #include <math.h>
 #include <microhttpd.h>
 #include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/select.h>
-#include <sys/socket.h>
 #include <time.h>
-#include <unistd.h>
 #include <zlib.h>
 #include "therm.h"
 
@@ -512,19 +506,11 @@ void httpd_end() {
 
 /* Parses the root template */
 void httpd_reload() {
-	char *root_template = NULL;
-
-	struct stat st;
-	stat("roottemplate", &st);
-	root_template = malloc(st.st_size + 1);
-	int tpfd = open("roottemplate", O_RDONLY);
-	if(tpfd < 0) {
+	char *root_template = loadfile("roottemplate");
+	if(root_template == NULL) {
 		perror("Couldn't open root template");
 		exit(1);
 	}
-	read(tpfd, root_template, st.st_size);
-	root_template[st.st_size] = '\0';
-	close(tpfd);
 
 	if(root != NULL) {
 		for(int i = 0; i < root->num; i++) {
