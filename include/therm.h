@@ -66,4 +66,9 @@ void pid_setvalues(float tp, float ti, float td,
                    float hp, float hi, float hd);
 
 char *loadfile(const char *name);
+
+void lua_end();
+void lua_init();
+void lua_reload();
+void lua_control(float temp, float hum);
 #endif

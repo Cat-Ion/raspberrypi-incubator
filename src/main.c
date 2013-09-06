@@ -12,6 +12,7 @@ static void end() {
 	logs_end();
 	i2c_end();
 	httpd_end();
+	lua_end();
 	exit(0);
 }
 
@@ -20,6 +21,7 @@ static void init() {
 	httpd_init();
 	logs_init();
 	pid_init();
+	lua_init();
 
 	/* Load persistent settings, or set the default values. */
 	if(persistent_load() == -1) {
@@ -55,6 +57,7 @@ static void init() {
 
 static void reload(int signal) {
 	httpd_reload();
+	lua_reload();
 }
 
 int main(int argc, char **argv) {
@@ -70,6 +73,7 @@ int main(int argc, char **argv) {
 		}
 
 		log_values(data[1], data[0]);
+		lua_control(data[1], data[0]);
 		pid_control(data[1], data[0]);
 		stats();
 
