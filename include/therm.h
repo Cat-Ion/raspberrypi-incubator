@@ -5,6 +5,12 @@
 
 #include "config.h"
 
+typedef enum {
+	LUA_USERFUN_TEMP,
+	LUA_USERFUN_HUM,
+	LUA_USERFUN_NUM
+} lua_userfun_t;
+
 typedef struct {
 	time_t timestamp;
 	float temperature;
