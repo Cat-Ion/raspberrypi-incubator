@@ -46,7 +46,7 @@ void logs_load() {
 	FILE *f = fopen(LOGPATH, "r");
 	
 	if(f == NULL) {
-		goto end;
+		return;
 	}
 
 	if(fread(&log_num, sizeof(int), 1, f) < 1) {
