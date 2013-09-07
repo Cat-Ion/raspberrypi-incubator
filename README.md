@@ -62,6 +62,5 @@ Todo
 
 - Change user/password through the web interface, and store them.
 
-- Scriptable reference values for temperature and humidity using lua?
-
-- Lacking that, an option to set a reduced nighttime temperature
+- An option to set a reduced nighttime temperature, possibly using the existing
+  lua scripting thing
