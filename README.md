@@ -14,7 +14,7 @@ wanted temperature and humidity levels.
 
 The master branch should always be in a stable state. Development
 takes place in the develop branch and all feature/* branches. The
-current stable version is 0.4.
+current stable version is 0.4.4.
 
 Feel free to send me a pull request if you have anything to
 contribute.
