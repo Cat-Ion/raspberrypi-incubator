@@ -77,4 +77,5 @@ void lua_end();
 void lua_init();
 void lua_reload();
 void lua_control(float temp, float hum);
+int lua_set_control_function(const char *str, lua_userfun_t function)
 #endif
