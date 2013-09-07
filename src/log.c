@@ -46,11 +46,11 @@ void logs_load() {
 	FILE *f = fopen(LOGPATH, "r");
 	
 	if(f == NULL) {
-		return;
+		goto end;
 	}
 
 	if(fread(&log_num, sizeof(int), 1, f) < 1) {
-		return;
+		goto end;
 	}
 
 	log_num = fread(log_data, sizeof(log_data_t), log_num, f);
@@ -59,12 +59,12 @@ void logs_load() {
 	}
 
 	if(fread(&log_day_num, sizeof(int), 1, f) < 1) {
-		return;
+		goto end;
 	}
 	
 	log_day_num = fread(log_day_data, sizeof(log_data_t), log_day_num, f);
 	for(int i = 0; i < log_day_num; i++) {
-		log_sorted[i] = log_day_data[i];
+		log_day_sorted[i] = log_day_data[i];
 	}
 
 	if(log_day_num > 0) {
@@ -75,6 +75,7 @@ void logs_load() {
 		smoothed_hum = log_data[log_num-1].humidity;
 	}
 
+end:
 	fclose(f);
 }
 
