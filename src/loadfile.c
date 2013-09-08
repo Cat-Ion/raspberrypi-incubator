@@ -17,6 +17,7 @@ char *loadfile(const char *name) {
 	ret = malloc(st.st_size + 1);
 	fd = open(name, O_RDONLY);
 	if(fd < 0) {
+		free(ret);
 		return NULL;
 	}
 	read(fd, ret, st.st_size);
